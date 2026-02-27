@@ -3,224 +3,729 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة N One | نظام الإدارة اللوجستية المتكامل</title>
+    <title>N One | غرفة قيادة الشركات (Diamond Radar Edition)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
+        /* ================= أساسيات التصميم (Diamond Radar Theme) ================= */
         :root {
-            --primary: #3498db;
-            --success: #25d366;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --bg: #f4f7f6;
-            --white: #ffffff;
-            --radius: 15px;
+            --primary: #0f172a;      /* نيفي بلو ملكي عميق */
+            --primary-light: #1e293b; 
+            --gold: #d4af37;         /* ذهبي ألماسي */
+            --gold-light: #fef08a;
+            --bg: #f0f4f8;           /* خلفية هادئة ملمومة */
+            --text: #334155;
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --warning: #f59e0b; 
+            --info: #0ea5e9;
+            --diamond-glow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
-        .container { background: var(--white); padding: 25px; border-radius: var(--radius); box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 95%; max-width: 500px; text-align: center; position: relative; }
-        .settings-icon { position: absolute; top: 20px; left: 20px; cursor: pointer; font-size: 26px; z-index: 1000; color: #7f8c8d; }
-        #settingsPanel { display: none; background: var(--white); padding: 25px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; text-align: right; overflow-y: auto; }
-        .dashboard-grid { display: flex; gap: 12px; margin-bottom: 25px; }
-        .stat-card { flex: 1; background: #eef2f3; padding: 15px; border-radius: 12px; border-right: 5px solid var(--primary); }
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: right; direction: rtl; outline: none; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 17px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        .btn-send { background-color: var(--success); color: white; }
-        .settings-btn { background-color: var(--primary); color: white; margin-bottom: 8px; width: 100%; }
-        .chart-container { width: 100%; height: 200px; margin-top: 20px; }
-        .table-wrapper { width: 100%; overflow-x: auto; margin-top: 15px; }
-        .all-orders-table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 12px; }
-        .all-orders-table th, .all-orders-table td { padding: 8px; border: 1px solid #eee; text-align: center; }
-        .all-orders-table th { background-color: var(--primary); color: white; }
-        .edit-btn { background-color: var(--warning); color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 10px; }
-        .delete-btn { background-color: var(--danger); color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 10px; margin-right: 5px; }
-        .logout-btn { background-color: var(--danger); color: white; padding: 8px; width: auto; font-size: 12px; margin-bottom: 15px; border-radius: 8px; float: left; cursor: pointer; }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg); margin: 0; padding: 0; 
+            color: var(--text); user-select: none; 
+            background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.03), transparent 30%);
+        }
+
+        /* الهيدر الملكي الرشيق */
+        .navbar { 
+            background: linear-gradient(to left, var(--primary), var(--primary-light)); 
+            height: 65px; display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
+        }
+        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+        .gold-text { color: var(--gold); }
+        
+        .welcome-msg {
+            font-weight: bold; color: var(--gold-light); font-size: 14px; 
+            background: rgba(255,255,255,0.08); padding: 6px 15px; border-radius: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.2); letter-spacing: 0.5px;
+        }
+
+        .btn-logout { 
+            background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); 
+            font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 18px; 
+            border-radius: 10px; color: #fca5a5; transition: 0.3s; 
+        }
+        .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
+
+        .container { max-width: 1350px; margin: 20px auto; padding: 0 15px; }
+
+        /* لمسة دلع لبطتنا */
+        .cute-msg {
+            text-align: center; margin-bottom: 15px; font-size: 15px; font-weight: bold; color: var(--primary);
+        }
+
+        /* بوابات الوصول السريع (كبسات الذهب الرشيقة) */
+        .quick-access-panel {
+            display: flex; gap: 15px; margin-bottom: 20px; justify-content: center;
+        }
+        
+        .btn-gold-gate {
+            background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+            border: 1px solid var(--gold); color: #854d0e; padding: 10px 20px;
+            border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: var(--diamond-glow);
+            display: flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-gold-gate:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4); background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); color: #713f12; }
+
+        .btn-silver-gate {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e1; color: var(--primary); padding: 10px 20px;
+            border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            display: flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-silver-gate:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); border-color: #94a3b8; }
+
+        /* الإحصائيات الألماسية المدمجة */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { 
+            background: white; padding: 20px; border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: center; 
+            border-top: 4px solid var(--primary); transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+        .stat-number { font-size: 32px; font-weight: 900; color: var(--primary); margin: 8px 0 2px; }
+        .stat-label { color: #64748b; font-size: 13px; font-weight: bold; }
+
+        /* الكروت ونموذج الإضافة المدمج */
+        .card { 
+            background: white; padding: 20px 25px; border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 20px; 
+            border-top: 4px solid var(--primary); 
+        }
+        .card-header { 
+            font-size: 18px; font-weight: 900; color: var(--primary); 
+            border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: center; }
+        
+        input, select, textarea { 
+            width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 10px; 
+            outline: none; background: #f8fafc; box-sizing: border-box; 
+            font-family: inherit; font-size: 14px; font-weight: bold; color: var(--primary); transition: 0.3s; 
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
+        
+        .btn-add { 
+            background: linear-gradient(135deg, var(--success), #059669); color: white; border: none; 
+            padding: 10px 20px; border-radius: 10px; font-size: 15px; font-weight: 900; 
+            cursor: pointer; height: 100%; width: 100%; transition: 0.3s; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.2);
+        }
+        .btn-add:hover { background: linear-gradient(135deg, #059669, #047857); transform: translateY(-1px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); }
+
+        /* الجداول الملكية الرشيقة */
+        .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        thead { background: var(--primary); color: white; }
+        th { padding: 12px 10px; text-align: right; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; }
+        td { padding: 12px 10px; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: bold; color: var(--text); }
+        tr:hover { background: #f8fafc; }
+        
+        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; }
+        .status-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-paused { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .status-expired { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; } 
+
+        /* أزرار التحكم الرشيقة */
+        .action-group { display: flex; gap: 6px; }
+        .action-btn { 
+            padding: 6px 10px; border-radius: 6px; border: none; color: white; 
+            cursor: pointer; font-size: 12px; transition: 0.2s; font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .action-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.15); }
+        .act-freeze { background: var(--warning); }
+        .act-active { background: var(--success); }
+        .act-delete { background: var(--danger); }
+        .act-renew { background: var(--info); }
+        .act-edit { background: var(--primary); }
+
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: 900; color: var(--primary); flex-direction: column; }
+        
+        /* ألوان الإعلانات */
+        .ad-color-normal { color: var(--text); }
+        .ad-color-news { color: var(--info); }
+        .ad-color-warning { color: var(--danger); font-weight: bold; }
+        .ad-color-offer { color: var(--success); }
+        
+        .ad-controls { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-broadcast { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; flex: 1; transition: 0.3s; font-size: 14px; box-shadow: 0 3px 10px rgba(15, 23, 42, 0.2); }
+        .btn-broadcast:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(15, 23, 42, 0.3); }
+        
+        .btn-popup { background: linear-gradient(135deg, var(--danger), #b91c1c); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; box-shadow: 0 3px 10px rgba(239, 68, 68, 0.2); }
+        .btn-popup:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
+        
+        .btn-clear-ad { background: linear-gradient(135deg, #64748b, #475569); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; box-shadow: 0 3px 10px rgba(100, 116, 139, 0.2); }
+        .btn-clear-ad:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(100, 116, 139, 0.3); }
+
+        /* ================= مفاجأة عيد الميلاد الألماسية ================= */
+        #birthday-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); z-index: 9999; justify-content: center; align-items: center;
+            flex-direction: column; text-align: center; color: white;
+            backdrop-filter: blur(10px);
+        }
+        .firework {
+            font-size: 50px; animation: pop 1s infinite alternate; margin-bottom: 20px;
+        }
+        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1.2); text-shadow: 0 0 30px #d4af37; } }
+        .cake-box { font-size: 80px; margin-bottom: 15px; animation: bounce 2s infinite; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
+        .bday-title { font-size: 35px; font-weight: 900; color: #d4af37; margin-bottom: 15px; text-shadow: 0 4px 15px rgba(212, 175, 55, 0.5); }
+        .bday-text { font-size: 20px; font-weight: bold; color: #f8fafc; margin-bottom: 35px; line-height: 1.8; max-width: 600px; text-shadow: 1px 1px 5px rgba(0,0,0,0.5); }
+        .btn-close-bday { background: linear-gradient(135deg, #d4af37, #b45309); color: white; border: none; padding: 12px 35px; border-radius: 15px; font-size: 18px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        .btn-close-bday:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.6); }
     </style>
 </head>
 <body>
 
-    <div id="mainPage" class="container">
-        <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
-
-        <div id="settingsPanel">
-            <div class="logout-btn" onclick="sessionStorage.clear(); location.href='index.html'">تسجيل خروج</div>
-            <div style="clear:both;"></div>
-            <h3 style="border-bottom: 2px solid #eee; padding-bottom: 10px;">إعدادات النظام المركزية</h3>
-            <label>نسبة العمولة الافتراضية:</label>
-            <input type="number" id="globalCommission" step="0.01" value="0.30">
-            
-            <button class="settings-btn" onclick="showSection('chart')">عرض مؤشرات الأداء البيانية</button>
-            <button class="settings-btn" onclick="showSection('archive')">سجل العمليات اليومي</button>
-            <button class="settings-btn" onclick="showSection('monthly')">التقارير المالية والجرد</button>
-
-            <div id="chartSec" class="chart-container" style="display:none;"><canvas id="revenueChart"></canvas></div>
-            
-            <div id="dataSec" style="display:none;">
-                <h4 id="secTitle"></h4>
-                <div id="secTotal" style="font-weight:bold; color:#2980b9; margin-bottom:10px;"></div>
-                <div class="table-wrapper">
-                    <table class="all-orders-table">
-                        <thead id="secHead"></thead>
-                        <tbody id="secBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <button style="background-color: var(--danger); color:white;" onclick="toggleSettings()">حفظ وإغلاق النظام</button>
-        </div>
-
-        <h2 id="displayCompanyName" style="color: var(--primary); margin-bottom: 20px;">لوحة بيانات N One</h2>
-        <div class="dashboard-grid">
-            <div class="stat-card"><small>صافي أرباح اليوم</small><div id="dailyProfit" style="font-weight: bold;">0.00 د.أ</div></div>
-            <div class="stat-card"><small>أعلى أداء شهري</small><div id="topCaptain" style="font-weight: bold;">-</div></div>
-        </div>
-        
-        <input type="tel" id="phoneInput" placeholder="رقم هاتف المندوب" oninput="searchCaptainInfo()">
-        <input type="text" id="nameInput" placeholder="اسم المندوب">
-        <input type="text" id="locationInput" placeholder="موقع التحميل (اسم المنشأة)">
-        <input type="number" id="deliveryInput" placeholder="أجرة التوصيل">
-        <input type="number" id="priceInput" placeholder="قيمة الشحنة">
-        
-        <button class="btn-send" onclick="processOrder()">إرسال بيانات الطلب</button>
+    <div id="loader-overlay">
+        <div style="font-size:35px; margin-bottom:10px; text-shadow: var(--diamond-glow);">💎</div>
+        <div>جاري الاتصال بالنواة المركزية المباشرة يا بطة...</div>
     </div>
 
-<script>
-    const API_URL = 'https://sheetdb.io/api/v1/qzfkwfzcpbrsm';
-    let allOrders = JSON.parse(localStorage.getItem('n1_orders')) || [];
-    let myChart;
+    <div id="birthday-overlay">
+        <div class="firework">🎆🎇✨🎇🎆</div>
+        <div class="cake-box">🎂</div>
+        <div class="bday-title">كل عام وإمبراطوريتنا بألف خير 👑</div>
+        <div class="bday-text">
+            يا أحلى حبة سكر وأغلى خالتو ميمي<br>
+            اليوم 20 و 21 مارس يوم ميلاد الإبداع والرقي<br>
+            العمر كله بالنجاح والألماس وجورايد دايماً بالقمة
+        </div>
+        <button class="btn-close-bday" onclick="closeBirthday()">بدء القيادة الألماسية 🚀</button>
+    </div>
 
-    window.onload = function() {
-        const user = sessionStorage.getItem('currentActiveUser');
-        const name = sessionStorage.getItem('currentActiveCompanyName');
-        if(!user) {
-            location.href = "index.html";
-        } else {
-            document.getElementById('displayCompanyName').innerText = "منشأة: " + name;
-            syncCloudData();
-            updateDashboard();
-        }
-    };
+    <nav class="navbar">
+        <div class="brand">N <span class="gold-text">One</span> Admin</div>
+        <div class="welcome-msg">مرحباً بكِ يا حبة السكر في غرفة القيادة السيادية 👑</div>
+        <button class="btn-logout" onclick="logout()">إغلاق الخزنة 🔒</button>
+    </nav>
 
-    async function syncCloudData() {
-        try {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            if(data.length > 0) {
-                // نأخذ فقط البيانات التي تخص الطلبات ونستبعد بيانات الشركات
-                allOrders = data.filter(o => o.phone && !o.user);
-                localStorage.setItem('n1_orders', JSON.stringify(allOrders));
-                updateDashboard();
+    <div class="container">
+        
+        <div class="cute-msg">كل الأمور تحت السيطرة يا أغلى مديرة، جاهزين للإبداع؟ ✨</div>
+
+        <div class="quick-access-panel">
+            <a href="manager.html" class="btn-gold-gate" title="الدخول المباشر لفحص السيستم">
+                <span style="font-size: 20px;">🩺</span> غرفة الطبيب (فحص النظام)
+            </a>
+            <a href="maintenance.html" class="btn-silver-gate" title="غرفة المراقبة والصيانة">
+                <span style="font-size: 20px;">⚙️</span> بوابة الصيانة المركزية
+            </a>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">شركات النقل (العملاء)</div>
+                <div class="stat-number" id="count-clients">0</div>
+            </div>
+            <div class="stat-card" style="border-top-color: var(--success);">
+                <div class="stat-label">شركات نشطة</div>
+                <div class="stat-number" id="count-active" style="color: var(--success);">0</div>
+            </div>
+            <div class="stat-card" style="border-top-color: var(--gold);">
+                <div class="stat-label">المردود المالي</div>
+                <div class="stat-number" id="revenue-count" style="color: var(--gold);">0</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span>✨ إضافة شركة نقل جديدة (System Isolation)</span>
+            </div>
+            <div class="form-grid">
+                <input type="text" id="new_name" placeholder="الاسم التجاري للشركة">
+                <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
+                <input type="password" id="new_pass" placeholder="كلمة المرور">
+                <select id="sub_duration">
+                    <option value="30">30 يوم</option>
+                    <option value="90">3 أشهر</option>
+                    <option value="180">6 أشهر</option>
+                    <option value="365">سنة كاملة</option>
+                </select>
+                <input type="number" id="sub_price" placeholder="الاشتراك (د.أ)">
+                
+                <div style="display: flex; align-items: center; gap: 8px; background: #e0f2fe; padding: 10px 12px; border-radius: 10px; border: 1px solid #bae6fd;">
+                    <input type="checkbox" id="can_send_ads" style="width: 18px; height: 18px; cursor: pointer;" checked>
+                    <label for="can_send_ads" style="font-weight: 900; color: var(--info); cursor: pointer; margin: 0; font-size: 13px;">تفعيل الإعلانات 📢</label>
+                </div>
+
+                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ زرع الجذور المستقلة 🚀</button>
+            </div>
+        </div>
+        
+        <div class="card" style="border-top-color: var(--gold);">
+            <div class="card-header">
+                <span>📢 مركز الإعلانات الذكية (Smart Announcements)</span>
+            </div>
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div style="flex: 2;">
+                    <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان أو التنبيه هنا يا بطة..." style="resize: none;"></textarea>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                    <select id="ad_target" title="الاستهداف">
+                        <option value="all">إرسال للجميع (الكل)</option>
+                        </select>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="ad_type" title="نوع الإعلان" style="flex: 1;">
+                            <option value="normal" class="ad-color-normal">إعلان عادي</option>
+                            <option value="news" class="ad-color-news">أخبار عامة 🔵</option>
+                            <option value="warning" class="ad-color-warning">تحذير / تنبيه 🔴</option>
+                            <option value="offer" class="ad-color-offer">عروض / هدايا 🟢</option>
+                        </select>
+                        <select id="ad_expire" title="مدة العرض" style="flex: 1;">
+                            <option value="1">لمدة ساعة</option>
+                            <option value="24" selected>لمدة 24 ساعة</option>
+                            <option value="168">لمدة أسبوع</option>
+                            <option value="permanent">دائم (حتى الحذف)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="ad-controls">
+                <button class="btn-broadcast" onclick="sendAnnouncement()">بث الإعلان بالشريط 🚀</button>
+                <button class="btn-popup" onclick="sendPopupAlert()">تنبيه طارئ (Pop-up) 🚨</button>
+                <button class="btn-clear-ad" onclick="clearAnnouncement()">مسح الإعلانات 🧹</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span>🏢 سجل شركات النقل (Companies Log)</span>
+                <span style="font-size:13px; color:var(--primary); font-weight: bold;">White Label Clients</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الشركة</th>
+                            <th>بيانات الدخول (ID)</th>
+                            <th>الخطة / السعر</th>
+                            <th>الصلاحية</th>
+                            <th>الحالة</th>
+                            <th>التحكم الشامل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clients-table">
+                        <tr><td colspan="6" style="text-align:center;">جاري تحميل البيانات يا حبة السكر...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, update, remove, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let allData = [];
+        let activeClients = [];
+
+        window.onload = async function() {
+            const sessionData = localStorage.getItem('currentUser');
+            if (!sessionData) {
+                // window.location.replace('index.html');
+                // return;
+            } else {
+                const currentUser = JSON.parse(sessionData);
+                if (currentUser.role !== 'admin') {
+                    window.location.replace('index.html');
+                    return;
+                }
             }
-        } catch(e) {}
-    }
+            fetchData();
+        };
 
-    function toggleSettings() {
-        let p = document.getElementById('settingsPanel');
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
-        if(p.style.display === 'none') updateDashboard();
-    }
-
-    function showSection(type) {
-        document.getElementById('chartSec').style.display = type === 'chart' ? 'block' : 'none';
-        document.getElementById('dataSec').style.display = type !== 'chart' ? 'block' : 'none';
-        if(type === 'chart') renderChart();
-        if(type === 'archive') updateArchive();
-        if(type === 'monthly') updateMonthly();
-    }
-
-    function updateArchive() {
-        document.getElementById('secTitle').innerText = "سجل العمليات المعتمد";
-        document.getElementById('secHead').innerHTML = "<tr><th>التوقيت</th><th>الاسم</th><th>الموقع</th><th>إجراءات</th></tr>";
-        let b = document.getElementById('secBody'); b.innerHTML = "";
-        allOrders.slice().reverse().forEach(o => {
-            b.innerHTML += `<tr><td>${o.time}</td><td>${o.name}</td><td>${o.location}</td><td>
-                <span class="edit-btn" onclick="editOrder(Number(o.id))">تعديل</span>
-                <span class="delete-btn" onclick="deleteOrder(Number(o.id))">حذف</span>
-            </td></tr>`;
-        });
-    }
-
-    function editOrder(id) {
-        let o = allOrders.find(x => x.id == id);
-        let nD = prompt("تعديل قيمة التوصيل المعتمدة:", o.delivery);
-        if(nD !== null) o.delivery = parseFloat(nD) || 0;
-        localStorage.setItem('n1_orders', JSON.stringify(allOrders));
-        updateArchive();
-    }
-
-    function deleteOrder(id) {
-        if(confirm("هل أنت متأكد من حذف السجل بشكل نهائي؟")) {
-            allOrders = allOrders.filter(x => x.id != id);
-            localStorage.setItem('n1_orders', JSON.stringify(allOrders));
-            updateArchive();
-        }
-    }
-
-    function updateMonthly() {
-        document.getElementById('secTitle').innerText = "التقرير المالي التفصيلي";
-        document.getElementById('secHead').innerHTML = "<tr><th>المندوب</th><th>عدد الطلبات</th><th>إجمالي عمولة N One</th></tr>";
-        let b = document.getElementById('secBody'); b.innerHTML = "";
-        let s = {}, t = 0, now = new Date().getTime(), week = 7 * 24 * 60 * 60 * 1000;
-        allOrders.forEach(o => {
-            let p = (now - o.timestamp > week) ? (parseFloat(o.lockedCommission) || 0.3) : parseFloat(document.getElementById('globalCommission').value);
-            t += p;
-            if(!s[o.phone]) s[o.phone] = {n: o.name, c: 0, p: 0};
-            s[o.phone].c++; s[o.phone].p += p;
-        });
-        document.getElementById('secTotal').innerText = `إجمالي إيرادات النظام: ${t.toFixed(2)} د.أ`;
-        for(let k in s) b.innerHTML += `<tr><td>${s[k].n}</td><td>${s[k].c}</td><td>${s[k].p.toFixed(2)}</td></tr>`;
-    }
-
-    function renderChart() {
-        let ctx = document.getElementById('revenueChart').getContext('2d');
-        let lbs = [...Array(7)].map((_, i) => { let d = new Date(); d.setDate(d.getDate() - i); return d.toLocaleDateString('ar-EG'); }).reverse();
-        let dt = lbs.map(l => allOrders.filter(o => o.date === l).reduce((sm, o) => sm + (parseFloat(o.lockedCommission) || 0.3), 0));
-        if(myChart) myChart.destroy();
-        myChart = new Chart(ctx, { type: 'line', data: { labels: lbs, datasets: [{ label: 'مؤشر النمو المالي', data: dt, borderColor: '#3498db', fill: true, backgroundColor: 'rgba(52, 152, 219, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false } });
-    }
-
-    function searchCaptainInfo() {
-        let phInput = document.getElementById('phoneInput');
-        let nmInput = document.getElementById('nameInput');
-        let val = phInput.value.trim();
-        let found = allOrders.slice().reverse().find(o => o.phone === val);
-        if(found) { nmInput.value = found.name; }
-    }
-
-    async function processOrder() {
-        let ph = document.getElementById('phoneInput'), nm = document.getElementById('nameInput'), lc = document.getElementById('locationInput'), dl = document.getElementById('deliveryInput'), pr = document.getElementById('priceInput'), cm = document.getElementById('globalCommission');
-        if(!ph.value || !lc.value) { alert("خطأ: يرجى استكمال كافة البيانات المطلوبة."); return; }
-        
-        const currentActiveCompName = sessionStorage.getItem('currentActiveCompanyName') || "N One";
-        let mapLink = "https://maps.google.com/?q=" + encodeURIComponent(lc.value);
-        let entry = { id: Date.now(), timestamp: new Date().getTime(), date: new Date().toLocaleDateString('ar-EG'), time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }), name: nm.value || "مندوب معتمد", phone: ph.value, location: lc.value, delivery: parseFloat(dl.value) || 0, price: parseFloat(pr.value) || 0, lockedCommission: parseFloat(cm.value) || 0.30, mapLink: mapLink };
-        
-        allOrders.push(entry); 
-        localStorage.setItem('n1_orders', JSON.stringify(allOrders));
-
-        // إرسال البيانات للسحابة (SheetDB)
-        try {
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({data: [entry]})
+        window.fetchData = function() {
+            const usersRef = ref(db, 'users');
+            onValue(usersRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    allData = Object.values(snapshot.val());
+                } else {
+                    allData = [];
+                }
+                renderTables();
+                populateAdTargets();
             });
-        } catch(e) {}
-
-        let cO = allOrders.filter(o => o.phone === entry.phone);
-        let msg = `إشعار طلب جديد - ${currentActiveCompName}\n--------------------------\nالمرسل إليه: ${entry.name}\nيرجى استلام الطلب التالي:\n\nالمصدر: ${entry.location}\nالموقع الجغرافي: ${entry.mapLink}\n\nبيانات التوصيل:\n- أجرة المندوب: ${entry.delivery} د.أ\n- قيمة الشحنة: ${entry.price} د.أ\n\nملخص النشاط اليومي:\n- إجمالي الطلبات: (${cO.length})\n- إجمالي المستحقات: ${cO.reduce((s,o)=>s+o.delivery,0)} د.أ\n\nنرجو الالتزام بمعايير الجودة والوقت.`;
+        }
         
-        let fP = entry.phone.startsWith('0') ? '962' + entry.phone.substring(1) : (entry.phone.startsWith('962') ? entry.phone : '962' + entry.phone);
-        window.open(`https://wa.me/${fP}?text=${encodeURIComponent(msg)}`, '_blank');
-        ph.value = ""; nm.value = ""; lc.value = ""; dl.value = ""; pr.value = ""; updateDashboard();
-    }
+        window.populateAdTargets = function() {
+            const targetSelect = document.getElementById('ad_target');
+            const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+            
+            targetSelect.innerHTML = '<option value="all">إرسال للجميع (الكل)</option>';
+            targetSelect.innerHTML += '<option value="clients_only">الشركات الصغيرة فقط</option>';
+            targetSelect.innerHTML += '<option value="shops_only">المنشآت التجارية فقط</option>';
+            
+            clients.forEach(c => {
+                const username = c.Client_User || c.user;
+                const name = c.Client_Name || c.name;
+                targetSelect.innerHTML += `<option value="${username}">موجه لـ: ${name}</option>`;
+            });
+        }
 
-    function updateDashboard() {
-        let t = new Date().toLocaleDateString('ar-EG');
-        let d = allOrders.filter(o => o.date === t).reduce((s,o)=>s+(parseFloat(o.lockedCommission)||0.3),0);
-        document.getElementById('dailyProfit').innerText = d.toFixed(2) + " د.أ";
-        let c = {}; allOrders.forEach(o => { if(o.name) c[o.name] = (c[o.name] || 0) + 1; });
-        let top = Object.keys(c).length > 0 ? Object.keys(c).reduce((a, b) => c[a] > c[b] ? a : b) : "-";
-        document.getElementById('topCaptain').innerText = top;
-    }
-</script>
+        window.sendAnnouncement = async function() {
+            const text = document.getElementById('ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً يا بطة 😊"); return; }
+            
+            const target = document.getElementById('ad_target').value;
+            const type = document.getElementById('ad_type').value;
+            const expireHours = document.getElementById('ad_expire').value;
+            
+            let expireTimestamp = null;
+            if(expireHours !== 'permanent') {
+                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
+            }
+            
+            const adData = {
+                text: text,
+                type: type,
+                expireAt: expireTimestamp,
+                timestamp: Date.now()
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                const snap = await get(ref(db));
+                const dbData = snap.val() || {};
+                let allUsers = [];
+                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
+                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
+
+                if(target === 'all') {
+                    await update(ref(db, 'announcements/global'), adData);
+                } else if(target === 'clients_only') {
+                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+                    const updates = {};
+                    clients.forEach(c => {
+                        const uName = c.Client_User || c.user;
+                        if(uName) updates[`announcements/users/${uName}`] = adData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else if(target === 'shops_only') {
+                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
+                    const updates = {};
+                    shops.forEach(s => {
+                        const uName = s.Shop_User || s.user || s.Client_User;
+                        if(uName) updates[`announcements/users/${uName}`] = adData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else {
+                    await update(ref(db, `announcements/users/${target}`), adData);
+                }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('ad_text').value = '';
+                alert("تم بث الإعلان بنجاح 😊");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال الإعلان");
+            }
+        }
+
+        window.sendPopupAlert = async function() {
+            const text = document.getElementById('ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً يا بطة 😊"); return; }
+            
+            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟ 😊")) return;
+
+            const target = document.getElementById('ad_target').value;
+            const alertData = {
+                message: text,
+                timestamp: Date.now()
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                const snap = await get(ref(db));
+                const dbData = snap.val() || {};
+                let allUsers = [];
+                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
+                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
+
+                if(target === 'all') {
+                    await update(ref(db, 'alerts/global'), alertData);
+                } else if(target === 'clients_only') {
+                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+                    const updates = {};
+                    clients.forEach(c => {
+                        const uName = c.Client_User || c.user;
+                        if(uName) updates[`alerts/users/${uName}`] = alertData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else if(target === 'shops_only') {
+                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
+                    const updates = {};
+                    shops.forEach(s => {
+                        const uName = s.Shop_User || s.user || s.Client_User;
+                        if(uName) updates[`alerts/users/${uName}`] = alertData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else {
+                    await update(ref(db, `alerts/users/${target}`), alertData);
+                }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('ad_text').value = '';
+                alert("تم إرسال التنبيه الطارئ بنجاح 😊");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال التنبيه");
+            }
+        }
+
+        window.clearAnnouncement = async function() {
+            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد يا بطة؟ 😊")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await remove(ref(db, 'announcements'));
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تنظيف واجهات الإعلانات 😊");
+        }
+
+        window.renderTables = function() {
+            const clientTbody = document.getElementById('clients-table');
+            
+            const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client').reverse();
+
+            document.getElementById('count-clients').innerText = clients.length;
+            document.getElementById('count-active').innerText = clients.filter(c => (c.status === 'active' || c.Client_Status === 'active')).length;
+            
+            let totalRev = 0;
+            clients.forEach(c => totalRev += Number(c.price || c.Client_Price || 0));
+            document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
+
+            renderRows(clientTbody, clients);
+        }
+
+        window.renderRows = function(tbody, data) {
+            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة حتى الآن</td></tr>'; return; }
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                const expiryDate = new Date(item.Client_Expiry || item.expiry);
+                expiryDate.setHours(23, 59, 59, 999);
+                const now = new Date();
+                const diffTime = expiryDate.getTime() - now.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                let statusBadge = '';
+                let daysText = '';
+
+                let currentStatus = String(item.Client_Status || item.status || 'active').trim().toLowerCase();
+
+                if (currentStatus === 'paused') {
+                    statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
+                    daysText = `<span style="color:#b45309;">موقف</span>`;
+                } else if (diffDays <= 0) {
+                    statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
+                    daysText = `<span style="color:#b91c1c; font-weight:bold;">انتهى</span>`;
+                    if(currentStatus === 'active') setStatusSilent(item.Client_User || item.user, 'paused');
+                } else {
+                    statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
+                    daysText = diffDays <= 3 ? `<span style="color:#b91c1c;">${diffDays} يوم ⚠️</span>` : `<span style="color:#15803d;">${diffDays} يوم</span>`;
+                }
+                
+                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#0ea5e9; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
+
+                const toggleBtn = currentStatus === 'active'
+                    ? `<button class="action-btn act-freeze" title="تجميد فوري" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
+                    : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
+
+                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#94a3b8' : '#0ea5e9'}" title="تفعيل/تعطيل الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
+
+                const row = `
+                    <tr>
+                        <td style="color: var(--primary);"><b>${item.Client_Name || item.name}</b></td>
+                        <td style="font-size:12px; color:#64748b; direction:ltr; text-align:right; font-weight: bold;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
+                        <td style="font-size:13px; font-weight: 900; color: var(--text);">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
+                        <td style="font-size:13px;">${daysText}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="action-group">
+                                <button class="action-btn act-edit" title="تعديل البيانات" onclick="editUser('${item.Client_User || item.user}', '${item.Client_Name || item.name}', '${item.Client_Pass || item.pass}')">✏️</button>
+                                ${toggleBtn}
+                                <button class="action-btn act-renew" title="تجديد" onclick="renewUser('${item.Client_User || item.user}')">🔄</button>
+                                ${adToggleBtn}
+                                <button class="action-btn act-delete" title="حذف" onclick="deleteUser('${item.Client_User || item.user}')">❌</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        window.addUser = async function() {
+            const role = 'client';
+            const name = document.getElementById('new_name').value;
+            const user = document.getElementById('new_user').value.trim();
+            const pass = document.getElementById('new_pass').value;
+            const days = document.getElementById('sub_duration').value;
+            const price = document.getElementById('sub_price').value;
+            const canSendAds = document.getElementById('can_send_ads').checked;
+
+            if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول يا بطة 😊"); return; }
+
+            const exists = allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase());
+            if (exists) {
+                alert("⛔ تنبيه اسم المستخدم هذا موجود بالفعل يرجى اختيار اسم آخر لضمان عزل البيانات");
+                return;
+            }
+
+            const expDate = new Date();
+            expDate.setDate(expDate.getDate() + parseInt(days));
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            const newItem = {
+                Client_ID: "CL_" + Date.now(),
+                Client_User: user,
+                Client_Pass: pass,
+                Client_Name: name,
+                Client_Role: role,
+                Client_Type: role,
+                Client_Status: "active",
+                Client_Expiry: expDate.toISOString().split('T')[0],
+                Client_Price: price,
+                Client_PlanDays: days,
+                can_send_ads: canSendAds,
+                id: "CL_" + Date.now(), 
+                user: user, 
+                pass: pass, 
+                name: name, 
+                role: role, 
+                type: role, 
+                status: "active", 
+                expiry: expDate.toISOString().split('T')[0], 
+                price: price, 
+                plan_days: days
+            };
+
+            try {
+                await set(ref(db, 'users/' + user), newItem);
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات معزولة بالكامل 😊");
+                
+                document.getElementById('new_name').value = '';
+                document.getElementById('new_user').value = '';
+                document.getElementById('new_pass').value = '';
+                document.getElementById('sub_price').value = '';
+                document.getElementById('can_send_ads').checked = true;
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ في الربط");
+            }
+        }
+
+        window.toggleAdPermission = async function(username, currentStatus) {
+            const nextStatus = !currentStatus;
+            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة؟ 😊" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة؟ 😊")) return;
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
+
+        window.editUser = async function(username, oldName, oldPass) {
+            const newName = prompt("تعديل الاسم التجاري يا بطة:", oldName);
+            if (newName === null) return;
+            const newPass = prompt("تعديل كلمة المرور:", oldPass);
+            if (newPass === null) return;
+
+            if (newName === oldName && newPass === oldPass) return;
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { name: newName, Client_Name: newName, pass: newPass, Client_Pass: newPass });
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تحديث البيانات 😊");
+        }
+
+        window.setStatus = async function(username, currentStatus) {
+            const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
+            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة 😊" : "إعادة التفعيل 😊")) return;
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
+
+        window.setStatusSilent = async function(username, newStatus) {
+            await update(ref(db, 'users/' + username), { status: newStatus, Client_Status: newStatus });
+        }
+
+        window.renewUser = async function(username) {
+            const days = prompt("عدد أيام التجديد الإضافية يا حبة السكر:", "30");
+            if (!days) return;
+            const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
+
+            const newDate = new Date();
+            newDate.setDate(newDate.getDate() + parseInt(days));
+            const formattedDate = newDate.toISOString().split('T')[0];
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تجديد الاشتراك بنجاح 😊");
+        }
+
+        window.deleteUser = async function(username) {
+            if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد يا بطة؟ 😊")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await remove(ref(db, 'users/' + username));
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم حذف الحساب نهائياً 😊");
+        }
+
+        window.logout = function() { 
+            localStorage.removeItem('currentUser');
+            window.location.replace('index.html');
+        }
+
+        // ================= دوال مفاجأة عيد الميلاد الملكية ================= //
+        window.closeBirthday = function() {
+            document.getElementById('birthday-overlay').style.display = 'none';
+        };
+
+        window.checkRoyalBirthday = function() {
+            const today = new Date();
+            const month = today.getMonth(); 
+            const day = today.getDate();
+            
+            if (month === 2 && (day === 20 || day === 21)) {
+                const shown = localStorage.getItem('bday_shown_' + day);
+                if (!shown) {
+                    document.getElementById('birthday-overlay').style.display = 'flex';
+                    localStorage.setItem('bday_shown_' + day, 'true');
+                }
+            }
+        };
+
+        setTimeout(checkRoyalBirthday, 1000);
+    </script>
+
 </body>
 </html>
