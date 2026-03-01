@@ -212,6 +212,13 @@
             color: #991b1b; font-size: 13px; font-weight: bold; align-items: center; gap: 10px; animation: fadeIn 0.3s;
         }
 
+        /* رسالة كاشف الـ VPN والمنطقة */
+        .vpn-warning-banner {
+            background: #fffbeb; border: 1px solid #fde68a; border-right: 4px solid var(--gold);
+            border-radius: 12px; padding: 15px; margin-bottom: 20px; display: none;
+            color: #b45309; font-size: 13px; font-weight: bold; align-items: center; gap: 10px; animation: fadeIn 0.3s;
+        }
+
         /* الإنجاز اليومي */
         .achievement-card {
             background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px;
@@ -248,6 +255,23 @@
         .btn-reject { background: var(--danger); }
         .btn-complete { background: var(--primary); width: 100%; }
         .btn-action:active { transform: scale(0.95); }
+
+        /* شريط العداد التنازلي للطلب */
+        .order-timer-bar {
+            height: 4px;
+            background: var(--danger);
+            width: 100%;
+            border-radius: 2px;
+            margin-bottom: 10px;
+            transition: width 1s linear;
+        }
+        .order-timer-text {
+            font-size: 12px;
+            color: var(--danger);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
 
         /* سهم الاتجاهات الألماسي (النسخة الراقية) */
         .btn-map-link {
@@ -537,6 +561,11 @@
 
             <div class="app-content">
                 
+                <div id="vpn-warning" class="vpn-warning-banner" style="display:none;">
+                    <span style="font-size: 18px;">🛡️</span>
+                    <span id="lang_vpn_warn">يا كابتن، يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة.</span>
+                </div>
+
                 <div id="balance-warning" class="warning-banner">
                     <span style="font-size: 18px;">⚠️</span>
                     <span id="lang_bal_warn">عذراً وصل رصيدك للحد المانع (-1 د.أ) يرجى شحن رصيدك للاستمرار في استقبال الطلبات</span>
@@ -747,6 +776,13 @@
         let globalPricesList = [];
         let verifiedCompanyId = null; 
         
+        let systemSettings = { order_timer: 10, anti_vpn: false };
+        let orderTimers = {};
+        
+        // قفل الاتصال السحري والذاكرة المحلية الذكية
+        let isListenerActive = false;
+        let localOrderSeen = {};
+        
         const COMMISSION_RATE = 0.10; 
 
         const dict = {
@@ -784,6 +820,7 @@
                 lang_header_cap: 'كابتن 🦸‍♂️',
                 lang_btn_out: 'خروج 🔒',
                 lang_bal_warn: 'عذراً وصل رصيدك للحد المانع (-1 د.أ) يرجى شحن رصيدك للاستمرار في استقبال الطلبات',
+                lang_vpn_warn: 'يا كابتن، يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة.',
                 lang_bal_title: 'الرصيد المالي الفعلي',
                 lang_rating: 'تقييم ألماسي 💎',
                 lang_ach_title: 'إنجاز اليوم 🏆',
@@ -833,6 +870,7 @@
                 lang_header_cap: 'Captain 🦸‍♂️',
                 lang_btn_out: 'Logout 🔒',
                 lang_bal_warn: 'Warning balance reached the limit (-1 JOD) Please recharge to receive orders',
+                lang_vpn_warn: 'Captain, please disable VPN to receive orders with the best quality and speed.',
                 lang_bal_title: 'Actual Balance',
                 lang_rating: 'Diamond Rating 💎',
                 lang_ach_title: 'Today\'s Wins 🏆',
@@ -1133,6 +1171,7 @@
         };
 
         window.logout = function() {
+            isListenerActive = false;
             localStorage.removeItem('n1_captain_session');
             window.location.reload();
         };
@@ -1206,8 +1245,82 @@
             }
         }
 
+        function listenToSystemSettings() {
+            onValue(ref(db, 'settings/order_timer'), (snap) => {
+                if(snap.exists() && snap.val().seconds) {
+                    systemSettings.order_timer = parseInt(snap.val().seconds);
+                }
+            });
+
+            onValue(ref(db, 'settings/anti_vpn'), (snap) => {
+                if(snap.exists()) {
+                    systemSettings.anti_vpn = snap.val().active === true;
+                }
+            });
+        }
+
+        function checkVPNStatus() {
+            if(!systemSettings.anti_vpn) return false;
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if(tz && tz.indexOf('Asia/Amman') === -1 && tz.indexOf('Asia/Jerusalem') === -1 && tz.indexOf('Asia/Damascus') === -1) {
+                    return true; 
+                }
+            } catch(e) { console.log(e); }
+            return false;
+        }
+
+        setInterval(() => {
+            if (currentCaptain) {
+                const vpnWarning = document.getElementById('vpn-warning');
+                if (systemSettings.anti_vpn && checkVPNStatus()) {
+                    vpnWarning.style.display = 'flex';
+                } else {
+                    vpnWarning.style.display = 'none';
+                }
+            }
+        }, 3000);
+
+        function startVisualTimer(orderId, timeLeft, totalTime) {
+            if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
+            
+            const lblSec = currentLang === 'ar' ? "ثانية للقبول" : "sec left";
+
+            orderTimers[orderId] = setInterval(() => {
+                timeLeft--;
+                
+                const bar = document.getElementById(`bar_timer_${orderId}`);
+                const text = document.getElementById(`text_timer_${orderId}`);
+                
+                if(timeLeft <= 0) {
+                    clearInterval(orderTimers[orderId]);
+                    rejectOrderAuto(orderId); 
+                } else {
+                    if(text) text.innerText = `${timeLeft} ${lblSec} ⏳`;
+                    if(bar) {
+                        const percent = (timeLeft / totalTime) * 100;
+                        bar.style.width = `${percent}%`;
+                        if(percent < 30) bar.style.background = '#991b1b'; 
+                    }
+                }
+            }, 1000);
+        }
+
+        window.rejectOrderAuto = async function(orderId) {
+            if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
+            const updates = {};
+            updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'timeout'; 
+            await update(ref(db), updates);
+            window.showToast(currentLang === 'ar' ? "انتهى الوقت! تم سحب الطلب ⏳" : "Time out! Order reassigned ⏳", true);
+        };
+
         function initRealtimeListeners() {
             if(!capNodeKey) return;
+            
+            if(isListenerActive) return;
+            isListenerActive = true;
+
+            listenToSystemSettings();
 
             const profileRef = ref(db, `captains/${capNodeKey}`);
             onValue(profileRef, (snapshot) => {
@@ -1275,6 +1388,18 @@
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
 
+                            // العداد الذكي المحلي بدون ما نكتب بالفايربيس
+                            if(!localOrderSeen[ord.id]) {
+                                localOrderSeen[ord.id] = Date.now();
+                            }
+                            const elapsed = Math.floor((Date.now() - localOrderSeen[ord.id]) / 1000);
+                            let timeLeft = systemSettings.order_timer - elapsed;
+
+                            if(timeLeft <= 0) {
+                                rejectOrderAuto(ord.id);
+                                return;
+                            }
+
                             hasActive = true;
                             hasNewRinging = true;
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
@@ -1285,9 +1410,10 @@
                             const lblFee = currentLang === 'ar' ? "رسوم التوصيل" : "Delivery Fee";
                             const lblOrd = currentLang === 'ar' ? "رقم" : "No";
                             const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
+                            const lblSec = currentLang === 'ar' ? "ثانية للقبول" : "sec left";
 
                             container.innerHTML += `
-                                <div class="order-card ringing">
+                                <div class="order-card ringing" id="card_${ord.id}">
                                     <div class="order-header">
                                         <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
                                         <span>${lblTime}: ${ordTime}</span>
@@ -1303,12 +1429,16 @@
                                             <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
                                         </div>
                                     </div>
+                                    <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ${lblSec} ⏳</div>
+                                    <div class="order-timer-bar" id="bar_timer_${ord.id}" style="width: 100%;"></div>
                                     <div class="action-buttons">
                                         <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}')">${btnAccept}</button>
                                         <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">${btnReject}</button>
                                     </div>
                                 </div>
                             `;
+                            
+                            setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
                         }
                         else if (ord.status === 'accepted') {
                             hasActive = true;
@@ -1328,7 +1458,7 @@
                             const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
                             container.innerHTML += `
-                                <div class="order-card">
+                                <div class="order-card" id="card_${ord.id}">
                                     <div class="order-header">
                                         <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
                                         <span>${lblTime}: ${ordTime}</span>
@@ -1468,6 +1598,7 @@
         }
 
         window.acceptOrder = async function(orderId, fee) {
+            if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
             const actualFee = parseFloat(fee || 0);
             const commissionAmount = actualFee * COMMISSION_RATE;
             const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
@@ -1490,6 +1621,7 @@
         window.rejectOrder = async function(orderId) {
             const msg = currentLang === 'ar' ? "هل أنت متأكد من رفض الطلب؟ ❌" : "Are you sure you want to reject? ❌";
             window.showAppConfirm(msg, async () => {
+                if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'rejected';
                 await update(ref(db), updates);
