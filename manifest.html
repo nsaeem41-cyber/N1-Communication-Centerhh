@@ -555,6 +555,19 @@
         let currentCaptainsFilter = 'active'; 
         let radarMemory = {};
 
+        // دالة ذكية للمطابقة وتجاهل حساسية الأحرف
+        function checkCompanyMatch(u, master1, master2) {
+            const m1 = String(master1 || '').toLowerCase().trim();
+            const m2 = String(master2 || '').toLowerCase().trim();
+            const vals = [
+                String(u.Client_Master || '').toLowerCase().trim(),
+                String(u.master || '').toLowerCase().trim(),
+                String(u.company || '').toLowerCase().trim(),
+                String(u.Company_ID || '').toLowerCase().trim()
+            ];
+            return vals.includes(m1) || vals.includes(m2);
+        }
+
         window.showAppNotification = function(msg, type = 'success') {
             const toast = document.getElementById('n-one-toast');
             const msgEl = document.getElementById('toast-msg');
@@ -628,7 +641,7 @@
             const newId = document.getElementById('persistent_company_id').value.trim();
             const actualMaster = getActiveMasterId();
             
-            if (newId && newId !== actualMaster) {
+            if (newId && newId.toLowerCase() !== actualMaster.toLowerCase()) {
                 try {
                     const snap = await get(ref(db, `users/${newId}`));
                     if (snap.exists()) {
@@ -637,7 +650,7 @@
                         showAppNotification("تم تعيين المعرف الجديد بنجاح", "success");
                     }
                 } catch(e) {}
-            } else if (newId === actualMaster) {
+            } else if (newId.toLowerCase() === actualMaster.toLowerCase()) {
                 showAppNotification("هذا هو المعرف الأساسي لشركتك", "success");
             }
 
@@ -676,6 +689,9 @@
             });
         }
 
+        // =========================================================================
+        // 🛠️ قسم الفحص المزدوج (Double-Check Algorithm) للرادار القناص
+        // =========================================================================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -685,17 +701,42 @@
                 for (let appOrdId in allAssignedOrders[capKey]) {
                     let ord = allAssignedOrders[capKey][appOrdId];
                     
-                    if (ord.status === 'assigned' && ord.dispatch_method === 'Auto') {
-                        if (now - ord.timestamp > 12000) { 
-                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                            if(ord.linkedRadarId) {
-                                updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                    if (ord.dispatch_method === 'Auto') {
+                        const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                        const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
+                        const elapsed = now - ord.timestamp;
+
+                        // 1️⃣ المرحلة الأولى فحص نبض الجهاز (التعليق أو الزومبي) بنعطيه 5 ثواني
+                        if (ord.status === 'assigned') {
+                            if (elapsed > 5000 || isAppClosed) { 
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                delete allAssignedOrders[capKey][appOrdId]; 
+                                if(ord.linkedRadarId) {
+                                    updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                    if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                                    radarMemory[ord.linkedRadarId].skipped[capKey] = true;
+                                }
+                                hasUpdates = true;
+                                continue;
                             }
-                            hasUpdates = true;
-                            continue;
+                        }
+                        // 2️⃣ المرحلة الثانية وقت اتخاذ القرار الذهبي بنعطيه 10 ثواني
+                        else if (ord.status === 'received' || ord.status === 'ringing') {
+                            if (elapsed > 10000 || isAppClosed) {
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                delete allAssignedOrders[capKey][appOrdId]; 
+                                if(ord.linkedRadarId) {
+                                    updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                    if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                                    radarMemory[ord.linkedRadarId].skipped[capKey] = true;
+                                }
+                                hasUpdates = true;
+                                continue;
+                            }
                         }
                     }
                     
+                    // 3️⃣ قسم معالجة القبول وخصم العمولة
                     if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
                         const commission = ord.commission_amount || 0;
                         if(commission > 0) {
@@ -725,10 +766,14 @@
                         
                         renderCompletedOrders();
                     }
+                    // 4️⃣ قسم معالجة الرفض الصريح وتجاوز الوقت
                     else if (ord.status === 'rejected' || ord.status === 'timeout') {
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                        delete allAssignedOrders[capKey][appOrdId]; 
                         if(ord.linkedRadarId) {
                             updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                            if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                            radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                         }
                         hasUpdates = true;
                     }
@@ -752,7 +797,7 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.values(data).forEach(priceObj => {
-                        if (priceObj.Client_Master === myMaster || priceObj.company === myMaster || priceObj.Client_Master === persistentCompanyId) {
+                        if (checkCompanyMatch(priceObj, myMaster, persistentCompanyId)) {
                             const sourceName = priceObj.Price_Source;
                             if (sourceName && !sourcesAdded.has(sourceName)) {
                                 sourcesAdded.add(sourceName);
@@ -840,19 +885,19 @@
                     const activeMasterId = getActiveMasterId();
                     
                     if(data.users) Object.values(data.users).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.master === activeMasterId || u.user === activeMasterId || u.Client_Master === persistentCompanyId) { 
+                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
                             u._node = 'users'; 
                             globalUsers.push(u); 
                         }
                     });
                     if(data.shops) Object.values(data.shops).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.company === activeMasterId || u.Client_Master === persistentCompanyId) { 
+                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
                             u._node = 'shops'; 
                             globalUsers.push(u); 
                         }
                     });
                     if(data.captains) Object.values(data.captains).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.company === activeMasterId || u.Company_ID === activeMasterId || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId) { 
+                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
                             u._node = 'captains'; 
                             globalUsers.push(u); 
                         }
@@ -870,7 +915,7 @@
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
             const myMaster = getActiveMasterId();
-            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster); 
             if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
             
@@ -962,17 +1007,26 @@
             });
         };
 
+        // =========================================================================
+        // 🚀 قسم التوزيع الذكي (Auto Dispatch Engine) - قلب الرادار
+        // =========================================================================
         window.triggerAutoRadarMaster = async function(silent = false) {
+            // 1️⃣ استخراج الطلبات المكتملة عشان ما نرجع نبعثها لكباتن ثانيين
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = getActiveMasterId();
-            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
+            
+            // 2️⃣ تحديد منشآت الشركة الحالية عشان نضمن خصوصية الداتا بين الشركات
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster);
             if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
             
+            // 3️⃣ تصفية الطلبات المعلقة والجديدة الخاصة بشركتنا فقط
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
             let activeLinkedIds = new Set();
             let busyCaptains = new Set();
+            
+            // 4️⃣ الفحص العميق للكباتن المشغولين بطلبات حالية لمنع التكدس
             for(let capKey in allAssignedOrders) {
                 for(let ordKey in allAssignedOrders[capKey]) {
                     let st = allAssignedOrders[capKey][ordKey].status;
@@ -985,6 +1039,7 @@
                 }
             }
             
+            // 5️⃣ الطلبات اللي فعلا بتحتاج توجيه فوري
             const trulyPendingOrders = pendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID));
 
             if(trulyPendingOrders.length === 0) {
@@ -992,8 +1047,10 @@
                 return;
             }
 
-            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId));
+            // 6️⃣ جلب قائمة الكباتن الخاصة بالشركة وتحضيرهم
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, myMaster, persistentCompanyId));
             
+            // 7️⃣ استخراج الكباتن الأونلاين والمتاحين فقط واستبعاد المشغولين
             let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
             availableCaptains = availableCaptains.filter(c => {
                 const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
@@ -1008,6 +1065,7 @@
             let dispatchedCount = 0;
             let updates = {};
 
+            // 8️⃣ الدوران على الطلبات وتوزيعها بناء على خوارزمية التطابق والمناطق
             for (let ord of trulyPendingOrders) {
                 if(availableCaptains.length === 0) break;
 
@@ -1015,26 +1073,37 @@
                 
                 const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
+                // 9️⃣ فلترة الكباتن الموجودين في نفس منطقة المنشأة لضمان السرعة مع تنبيه المنطقة الميتة
                 let eligibleCaptains = availableCaptains.filter(c => {
                      const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
                      return cRegion === shopOriginArea;
                 });
 
-                if (eligibleCaptains.length === 0) continue;
+                if (eligibleCaptains.length === 0) {
+                    if (!ord.deadZoneAlertShown) {
+                        showAppNotification(`تنبيه المنطقة الميتة لا يوجد كباتن متاحين في منطقة ${shopOriginArea || 'غير محددة'} لطلب ${ord.Shop_Name}`, "warning");
+                        ord.deadZoneAlertShown = true;
+                    }
+                    continue;
+                }
 
+                // 🔟 التأكد من أن الكابتن لم يرفض أو يتجاهل هذا الطلب مسبقا
                 let unskippedCaptains = eligibleCaptains.filter(c => {
                      const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
                      const hasSkipped = radarMemory[ord.Shop_Ord_ID] && radarMemory[ord.Shop_Ord_ID].skipped && radarMemory[ord.Shop_Ord_ID].skipped[cKey];
                      return !hasSkipped;
                 });
 
+                // قاعدة إعادة التدوير اللانهائي المحدثة والمنقذة عشان الطلب ما يوقف أبدا
                 if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
                      updates[`radar_memory/${ord.Shop_Ord_ID}`] = null;
+                     delete radarMemory[ord.Shop_Ord_ID]; // المسح الفوري من الذاكرة المحلية عشان الرادار يلف فورا بدون ما يستنى تحديث الفايربيس
                      unskippedCaptains = eligibleCaptains;
                 }
 
                 if (unskippedCaptains.length === 0) continue;
 
+                // اختيار الكابتن الأنسب وتجهيز الطلب للطبخ 🍳
                 let selectedCaptain = unskippedCaptains[0];
                 const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
 
@@ -1065,6 +1134,7 @@
                 dispatchedCount++;
             }
 
+            // تنفيذ أوامر التوزيع بقاعدة البيانات بلمحة بصر
             if(Object.keys(updates).length > 0) {
                 try {
                     await update(ref(db), updates);
@@ -1401,7 +1471,7 @@
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
                 const myMaster = getActiveMasterId();
-                const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
+                const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
                 myShops.push(myMaster);
                 if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
                 
@@ -1490,7 +1560,7 @@
             }
             
             const myMaster = getActiveMasterId();
-            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId));
+            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && checkCompanyMatch(u, myMaster, persistentCompanyId));
             
             if (cap) {
                 document.getElementById('s_cap_name').innerText = cap.Cap_Name || cap.name;
@@ -1549,7 +1619,7 @@
             
             let allMyCaptains = globalUsers.filter(u => 
                 (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain' || u._node === 'captains') && 
-                (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId)
+                checkCompanyMatch(u, myMaster, persistentCompanyId)
             ).reverse();
             
             document.getElementById('stat-cap-total').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true).length;
@@ -1631,6 +1701,7 @@
             });
         };
 
+        // تفعيل الكابتن وتثبيته دائماً مع الشركة الأساسية (Master)
         window.approvePendingCaptain = async function(userKey) {
             if(confirm("تفعيل الحساب واعتماده رسميا")) {
                 let nodeFound = null;
@@ -1640,10 +1711,17 @@
 
                 if (nodeFound) {
                     const updates = {};
+                    const mainCompany = getActiveMasterId(); // المسمى الثابت للشركة
+
                     updates[`${nodeFound}/${userKey}/Cap_Status`] = 'active';
                     updates[`${nodeFound}/${userKey}/status`] = 'active';
                     updates[`${nodeFound}/${userKey}/is_pending`] = false;
                     updates[`${nodeFound}/${userKey}/app_access`] = 'granted';
+                    
+                    // حفظ الارتباط بالشركة الرئيسية بشكل دائم
+                    updates[`${nodeFound}/${userKey}/company`] = mainCompany;
+                    updates[`${nodeFound}/${userKey}/Company_ID`] = mainCompany;
+                    updates[`${nodeFound}/${userKey}/Client_Master`] = mainCompany;
                     
                     if(confirm("تم التفعيل هل ترغب بإضافة رصيد افتتاحي لمحفظته الآن")) {
                         let initBal = prompt("أدخل قيمة الرصيد الافتتاحي", "0.00");
@@ -1753,6 +1831,7 @@
         };
 
         function refreshDynamicElements() {
+            checkAssignedOrdersStatus();
             renderRadar();
             if (isAutoRadarActive) {
                 triggerAutoRadarMaster(true);
