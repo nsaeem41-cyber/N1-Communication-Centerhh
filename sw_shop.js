@@ -251,10 +251,15 @@
             flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 14px; 
             cursor: pointer; transition: 0.3s; border: none; color: white;
         }
+        .btn-action:active { transform: scale(0.95); }
         .btn-accept { background: var(--success); }
         .btn-reject { background: var(--danger); }
-        .btn-complete { background: var(--primary); width: 100%; }
-        .btn-action:active { transform: scale(0.95); }
+        
+        /* ألوان حالات الطلب الخماسية */
+        .btn-status-picked { background: #f97316; } /* برتقالي */
+        .btn-status-onway { background: #8b5cf6; } /* بنفسجي */
+        .btn-status-arrived { background: #06b6d4; } /* أزرق سماوي */
+        .btn-status-completed { background: var(--gold); color: var(--primary); } /* ذهبي */
 
         /* شريط العداد التنازلي للطلب */
         .order-timer-bar {
@@ -778,8 +783,6 @@
         
         let systemSettings = { order_timer: 10, anti_vpn: false };
         let orderTimers = {};
-        
-        // قفل الاتصال السحري والذاكرة المحلية الذكية
         let isListenerActive = false;
         let localOrderSeen = {};
         
@@ -1245,6 +1248,29 @@
             }
         }
 
+        // مستشعر الـ VPN الدولي الجديد
+        let isVpnDetected = false;
+        async function detectVPN() {
+            if(!systemSettings.anti_vpn) {
+                isVpnDetected = false;
+                return;
+            }
+            try {
+                const response = await fetch('https://get.geojs.io/v1/ip/country.json');
+                const data = await response.json();
+                if (data.country && data.country !== 'JO' && data.country !== 'JOR') {
+                    isVpnDetected = true;
+                } else {
+                    isVpnDetected = false;
+                }
+            } catch(e) {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1 && tz.indexOf('Asia/Jerusalem') === -1 && tz.indexOf('Asia/Damascus') === -1);
+            }
+        }
+        
+        setInterval(detectVPN, 5000); 
+
         function listenToSystemSettings() {
             onValue(ref(db, 'settings/order_timer'), (snap) => {
                 if(snap.exists() && snap.val().seconds) {
@@ -1252,34 +1278,28 @@
                 }
             });
 
-            onValue(ref(db, 'settings/anti_vpn'), (snap) => {
+            const handleVpnSnap = (snap) => {
                 if(snap.exists()) {
-                    systemSettings.anti_vpn = snap.val().active === true;
+                    systemSettings.anti_vpn = snap.val().active === true || snap.val() === true;
+                    if(systemSettings.anti_vpn) detectVPN();
                 }
-            });
-        }
+            };
 
-        function checkVPNStatus() {
-            if(!systemSettings.anti_vpn) return false;
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                if(tz && tz.indexOf('Asia/Amman') === -1 && tz.indexOf('Asia/Jerusalem') === -1 && tz.indexOf('Asia/Damascus') === -1) {
-                    return true; 
-                }
-            } catch(e) { console.log(e); }
-            return false;
+            onValue(ref(db, 'settings/anti_vpn'), handleVpnSnap);
+            onValue(ref(db, 'settings/vpn_active'), handleVpnSnap);
+            onValue(ref(db, 'settings/vpn'), handleVpnSnap);
         }
 
         setInterval(() => {
             if (currentCaptain) {
                 const vpnWarning = document.getElementById('vpn-warning');
-                if (systemSettings.anti_vpn && checkVPNStatus()) {
+                if (systemSettings.anti_vpn && isVpnDetected) {
                     vpnWarning.style.display = 'flex';
                 } else {
                     vpnWarning.style.display = 'none';
                 }
             }
-        }, 3000);
+        }, 2000);
 
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
@@ -1388,7 +1408,6 @@
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
 
-                            // العداد الذكي المحلي بدون ما نكتب بالفايربيس
                             if(!localOrderSeen[ord.id]) {
                                 localOrderSeen[ord.id] = Date.now();
                             }
@@ -1440,11 +1459,10 @@
                             
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
                         }
-                        else if (ord.status === 'accepted') {
+                        else if (['accepted', 'picked_up', 'on_way', 'arrived'].includes(ord.status)) {
                             hasActive = true;
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                             
-                            const btnComp = currentLang === 'ar' ? "إتمام وتسليم الطلب ✅" : "Complete Order ✅";
                             const lblVal = currentLang === 'ar' ? "قيمة الطلب" : "Order Val";
                             const lblFee = currentLang === 'ar' ? "رسوم التوصيل" : "Delivery Fee";
                             const lblOrd = currentLang === 'ar' ? "رقم" : "No";
@@ -1456,6 +1474,28 @@
                             
                             const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery));
                             const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+
+                            let btnClass = '';
+                            let btnText = '';
+                            let nextAction = '';
+
+                            if (ord.status === 'accepted') {
+                                btnClass = 'btn-status-picked';
+                                btnText = currentLang === 'ar' ? 'استلمت من المنشأة 🥡' : 'Picked Up 🥡';
+                                nextAction = `updateOrderStatus('${ord.id}', 'picked_up')`;
+                            } else if (ord.status === 'picked_up') {
+                                btnClass = 'btn-status-onway';
+                                btnText = currentLang === 'ar' ? 'أنا في الطريق للعميل 🚗' : 'On the Way 🚗';
+                                nextAction = `updateOrderStatus('${ord.id}', 'on_way')`;
+                            } else if (ord.status === 'on_way') {
+                                btnClass = 'btn-status-arrived';
+                                btnText = currentLang === 'ar' ? 'وصلت عند العميل 📍' : 'Arrived 📍';
+                                nextAction = `updateOrderStatus('${ord.id}', 'arrived')`;
+                            } else if (ord.status === 'arrived') {
+                                btnClass = 'btn-status-completed';
+                                btnText = currentLang === 'ar' ? 'تم التسليم بنجاح 💎' : 'Delivered 💎';
+                                nextAction = `completeOrder('${ord.id}')`;
+                            }
 
                             container.innerHTML += `
                                 <div class="order-card" id="card_${ord.id}">
@@ -1477,7 +1517,7 @@
                                             <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
                                         </div>
                                     </div>
-                                    <button class="btn-action btn-complete" onclick="completeOrder('${ord.id}')">${btnComp}</button>
+                                    <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width: 100%; border: none; font-weight: 900;">${btnText}</button>
                                 </div>
                             `;
                         }
@@ -1628,15 +1668,30 @@
             });
         };
 
+        // دالة تحديث الحالة بدون أسئلة
+        window.updateOrderStatus = async function(orderId, newStatus) {
+            try {
+                const updates = {};
+                updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = newStatus;
+                await update(ref(db), updates);
+                // رسالة خفيفة للكابتن عشان يتأكد إنه الكبسة اشتغلت بدون ما تزعجه
+                window.showToast(currentLang === 'ar' ? "تم تحديث الحالة بنجاح 🚀" : "Status updated 🚀", false);
+            } catch (e) {
+                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
+            }
+        };
+
+        // دالة التسليم النهائي بدون أسئلة لتسريع الشغل
         window.completeOrder = async function(orderId) {
-            const msg = currentLang === 'ar' ? "تأكيد إتمام وتسليم الطلب للزبون؟ ✅" : "Confirm order completion? ✅";
-            window.showAppConfirm(msg, async () => {
+            try {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'completed';
                 updates[`assigned_orders/${capNodeKey}/${orderId}/completed_at`] = Date.now();
-                
                 await update(ref(db), updates);
-            });
+                window.showToast(currentLang === 'ar' ? "تم التسليم بنجاح يا بطل 💎" : "Delivered successfully 💎", false);
+            } catch (e) {
+                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
+            }
         };
 
         window.openHistoryModal = function() {
