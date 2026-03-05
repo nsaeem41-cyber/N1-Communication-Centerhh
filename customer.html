@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>N One | Customer Super App 💎</title>
+    
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        /* ================= تصميم العميل (N One Diamond UI) ================= */
+        :root {
+            --primary: #0f172a;    
+            --accent: #1e293b;     
+            --gold: #d4af37;       
+            --bg: #f8fafc;         
+            --text: #334155;       
+            --success: #10b981;    
+            --danger: #ef4444;     
+            --info: #0ea5e9;
+            --diamond: #e0f2fe;    
+            --pink: #db2777;
+            --pink-light: #fce7f3;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 0; background-color: #334155;
+            display: flex; justify-content: center; min-height: 100vh;
+            -webkit-tap-highlight-color: transparent; overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%; max-width: 480px; background: var(--bg);
+            height: 100vh; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* ================= الخريطة التخيلية ================= */
+        .map-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #e2e8f0;
+            background-image: 
+                linear-gradient(white 2px, transparent 2px),
+                linear-gradient(90deg, white 2px, transparent 2px),
+                linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+            background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+            z-index: 1;
+        }
+
+        /* ================= الهيدر الألماسي ================= */
+        .top-bar {
+            position: absolute; top: 20px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
+        }
+        .profile-btn {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            padding: 8px 15px; border-radius: 20px; border: 2px solid var(--gold);
+            display: flex; align-items: center; gap: 8px; font-weight: 900;
+            color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer; transition: 0.3s;
+        }
+        .profile-btn:active { transform: scale(0.95); }
+        
+        .sos-btn {
+            background: var(--danger); color: white; border: none;
+            width: 45px; height: 45px; border-radius: 50%; font-size: 18px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); cursor: pointer;
+            animation: pulseSOS 2s infinite; font-weight: 900;
+        }
+        @keyframes pulseSOS {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .voice-ai-btn {
+            position: absolute; bottom: 75vh; right: 20px; z-index: 15;
+            background: linear-gradient(135deg, var(--info), var(--primary));
+            color: white; border: none; width: 60px; height: 60px;
+            border-radius: 50%; font-size: 24px; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
+            display: flex; justify-content: center; align-items: center;
+            transition: 0.3s; border: 3px solid white;
+        }
+        .voice-ai-btn:active { transform: scale(0.9); }
+
+        /* ================= اللوحة السفلية ================= */
+        .bottom-sheet {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 72vh;
+            background: white; border-radius: 35px 35px 0 0; z-index: 20;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+        .drag-handle { width: 50px; height: 5px; background: #cbd5e1; border-radius: 10px; margin: 15px auto; }
+        
+        .app-tabs { display: flex; gap: 10px; padding: 0 20px; margin-bottom: 15px; }
+        .app-tab {
+            flex: 1; padding: 12px; text-align: center; border-radius: 15px;
+            font-weight: 900; font-size: 14px; cursor: pointer; transition: 0.3s;
+            background: #f1f5f9; color: #64748b; border: 2px solid transparent;
+        }
+        .app-tab.active { background: var(--gold); color: var(--primary); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
+
+        .sheet-content { padding: 0 25px 20px; overflow-y: auto; flex: 1; }
+        
+        .ai-greeting { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
+        .ai-greeting span { color: var(--gold); }
+
+        .wallet-card {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 15px; padding: 15px; color: white; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 5px 15px rgba(15, 23, 42, 0.2); cursor: pointer;
+        }
+
+        .input-box {
+            background: #f8fafc; border: 2px solid #e2e8f0; padding: 12px 15px;
+            border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+        }
+        .input-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; font-weight: bold; color: var(--primary); pointer-events: none; }
+        .schedule-btn { background: var(--diamond); color: var(--info); padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 900; pointer-events: auto; cursor: pointer; border: 1px solid #bae6fd; }
+
+        .saved-places { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;}
+        .place-item { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 15px; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 13px; white-space: nowrap; cursor: pointer; }
+
+        .bid-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .bid-input { flex: 1; background: #fffbeb; border: 2px solid #fde68a; padding: 12px; border-radius: 15px; font-size: 18px; font-weight: 900; color: #b45309; text-align: center; outline: none; }
+
+        .gift-toggle { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 12px 15px; border-radius: 12px; margin-bottom: 20px; }
+        .gift-toggle span { font-size: 13px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 5px; }
+
+        .btn-main {
+            background: var(--primary); color: white; width: 100%; border: none;
+            padding: 15px; border-radius: 15px; font-size: 16px; font-weight: 900;
+            cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 10px;
+        }
+        .btn-main:active { transform: scale(0.98); }
+
+        /* ================= Panels ================= */
+        .ride-options-panel, .mood-panel, .searching-panel, .offers-panel, .market-panel { display: none; }
+        
+        .ride-card {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px; border: 2px solid transparent; border-radius: 15px;
+            margin-bottom: 8px; transition: 0.3s; cursor: pointer; background: #f8fafc;
+        }
+        .ride-card.selected { border-color: var(--gold); background: #fffbeb; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15); }
+        .ride-card.pink-option.selected { border-color: var(--pink); background: var(--pink-light); box-shadow: 0 4px 15px rgba(219, 39, 119, 0.15); }
+        
+        .ride-img { width: 50px; height: 50px; background: white; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .ride-info { flex: 1; margin-right: 12px; }
+        .ride-name { font-size: 15px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 5px; }
+        .ride-time { font-size: 11px; color: #64748b; font-weight: bold; margin-top: 3px; }
+        .ride-price { font-size: 16px; font-weight: 900; color: var(--primary); }
+
+        .btn-back-sheet { background: transparent; border: none; color: var(--primary); font-size: 24px; cursor: pointer; padding: 0; margin-bottom: 10px; }
+
+        .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .mood-btn {
+            background: white; border: 2px solid #e2e8f0; border-radius: 15px; padding: 15px 10px;
+            font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .mood-btn.active { border-color: var(--info); background: var(--diamond); color: var(--info); }
+        .mood-btn span { font-size: 24px; }
+
+        .searching-panel { text-align: center; padding: 30px 0; }
+        .radar-spinner {
+            width: 80px; height: 80px; border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--gold); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .offer-card {
+            background: white; border: 2px solid var(--gold); border-radius: 15px;
+            padding: 15px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.15);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .offer-cap-info { display: flex; flex-direction: column; gap: 4px; }
+        .offer-price { font-size: 20px; font-weight: 900; color: var(--primary); }
+        .offer-btn { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; }
+
+        .multi-errand-banner {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white;
+            padding: 15px; border-radius: 15px; margin-bottom: 15px; display: flex;
+            justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(109, 40, 217, 0.3); cursor: pointer;
+        }
+        .restaurant-card {
+            background: white; border: 1px solid #e2e8f0; border-radius: 15px;
+            padding: 15px; margin-bottom: 12px; display: flex; gap: 15px; align-items: center; cursor: pointer;
+        }
+
+        /* Toggle Switches */
+        .switch-small { position: relative; display: inline-block; width: 40px; height: 24px; }
+        .switch-small input { opacity: 0; width: 0; height: 0; }
+        .slider-small { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider-small:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider-small { background-color: var(--success); }
+        input:checked + .slider-small:before { transform: translateX(16px); }
+
+        /* ================= الإشعارات الفخمة (N One Custom Alerts) ================= */
+        
+        /* 1. التوست المنزلق من الأعلى */
+        .n-toast {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+            color: white; padding: 15px 20px; border-radius: 15px;
+            display: flex; gap: 15px; align-items: center; z-index: 99999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--gold);
+            width: 90%; max-width: 400px; box-sizing: border-box;
+            transition: top 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .n-toast.show { top: 30px; }
+        .n-toast-icon { font-size: 24px; }
+        .n-toast-content h4 { margin: 0 0 5px 0; font-size: 14px; color: var(--gold); font-weight: 900; }
+        .n-toast-content p { margin: 0; font-size: 13px; font-weight: bold; line-height: 1.4; }
+
+        /* 2. النافذة المنبثقة الذكية (Modal) */
+        .n-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px);
+            z-index: 100000; display: none; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .n-modal-overlay.show { display: flex; opacity: 1; }
+        .n-modal-box {
+            background: white; width: 85%; max-width: 350px; border-radius: 25px;
+            padding: 30px 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-top: 6px solid var(--primary);
+        }
+        .n-modal-overlay.show .n-modal-box { transform: scale(1); }
+        .n-modal-icon { font-size: 50px; margin-bottom: 15px; }
+        .n-modal-title { font-size: 18px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
+        .n-modal-desc { font-size: 14px; color: #64748b; font-weight: bold; line-height: 1.5; margin-bottom: 25px; }
+        .n-modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .n-modal-btn {
+            flex: 1; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 14px;
+            cursor: pointer; border: none; transition: 0.2s;
+        }
+        .n-modal-btn-confirm { background: var(--primary); color: white; }
+        .n-modal-btn-confirm.danger { background: var(--danger); }
+        .n-modal-btn-cancel { background: #f1f5f9; color: #64748b; }
+
+    </style>
+</head>
+<body>
+
+    <div id="n-toast" class="n-toast">
+        <div id="toast-icon" class="n-toast-icon">💎</div>
+        <div class="n-toast-content">
+            <h4 id="toast-title">عنوان</h4>
+            <p id="toast-desc">التفاصيل هنا</p>
+        </div>
+    </div>
+
+    <div id="n-modal" class="n-modal-overlay">
+        <div class="n-modal-box">
+            <div id="modal-icon" class="n-modal-icon">✨</div>
+            <div id="modal-title" class="n-modal-title">العنوان</div>
+            <div id="modal-desc" class="n-modal-desc">التفاصيل التوضيحية</div>
+            <div class="n-modal-actions">
+                <button id="modal-btn-cancel" class="n-modal-btn n-modal-btn-cancel" onclick="closeModal()">إلغاء</button>
+                <button id="modal-btn-confirm" class="n-modal-btn n-modal-btn-confirm" onclick="executeModalAction()">تأكيد</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <div class="map-bg"></div>
+
+        <div class="top-bar">
+            <div class="profile-btn" onclick="showModal('الملف الشخصي 💎', 'هنا يمكنك إدارة محفظة العائلة، مراجعة نقاط الولاء، وتحديث بياناتك الألماسية.', '👤', 'فهمت', null, true)">
+                <span>👤</span>
+                <span style="display: flex; flex-direction: column; line-height: 1;">
+                    <span>💎 1,250 نقطة</span>
+                </span>
+            </div>
+            <button class="sos-btn" onclick="triggerSOS()">🛡️</button>
+        </div>
+
+        <button class="voice-ai-btn" onclick="activateVoiceAI()">🎙️</button>
+
+        <div class="bottom-sheet" id="main-sheet">
+            <div class="drag-handle"></div>
+            
+            <div class="app-tabs">
+                <div class="app-tab active" onclick="switchMainTab('rides', this)">🚗 مشاوير N One</div>
+                <div class="app-tab" onclick="switchMainTab('market', this)">🍔 N One Market</div>
+            </div>
+
+            <div class="sheet-content">
+                
+                <div id="rides-section">
+                    <div class="ai-greeting" id="smart-greeting">صباح الخير، <span>عالشغل؟</span> 💼</div>
+                    
+                    <div class="wallet-card" onclick="showModal('محفظة العائلة 👨‍👩‍👧', 'رصيدك الحالي 25.50 د.أ. يمكنك الدفع عن رحلات أفراد عائلتك أو إرسال رصيد كهدية لأصدقائك بضغطة زر.', '💳', 'شحن المحفظة', null, true)">
+                        <div>
+                            <div style="font-size: 11px; font-weight: bold; opacity: 0.9;">محفظة N One العائلية 👨‍👩‍👧</div>
+                            <div style="font-size: 18px; font-weight: 900; margin-top: 4px;">25.50 د.أ</div>
+                        </div>
+                        <div style="font-size: 24px;">💳</div>
+                    </div>
+
+                    <div class="input-box">
+                        <span>🟢</span>
+                        <input type="text" placeholder="موقعك (الجبيهة)" readonly>
+                    </div>
+                    <div class="input-box" onclick="showRideOptions()">
+                        <span>📍</span>
+                        <input type="text" placeholder="إلى أين تريد الذهاب؟">
+                        <div class="schedule-btn" onclick="event.stopPropagation(); showModal('جدولة الرحلات 📅', 'قم بتحديد وقت لاحق، وسيقوم النظام أوتوماتيكياً بإرسال كابتن لموقعك في الموعد المحدد بدون تدخل منك.', '⏰', 'موافق', null, true)">جدولة 📅</div>
+                    </div>
+
+                    <div class="saved-places">
+                        <div class="place-item" onclick="showRideOptions()">🏠 المنزل</div>
+                        <div class="place-item" onclick="showRideOptions()">💼 العمل</div>
+                        <div class="place-item" onclick="showRideOptions()">🎓 الجامعة</div>
+                    </div>
+
+                    <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">أو اقترح سعرك (نظام المساومة)</div>
+                    <div class="bid-container">
+                        <input type="number" class="bid-input" placeholder="2.50" step="0.25">
+                        <div style="background: #f1f5f9; padding: 15px; border-radius: 15px; font-weight: 900; color: #64748b;">د.أ</div>
+                    </div>
+
+                    <button class="btn-main" onclick="requestOffers()">اطلب وساوم الكباتن 🚀</button>
+                </div>
+
+                <div id="state-ride" class="ride-options-panel">
+                    <button class="btn-back-sheet" onclick="goBackHome()">🡢</button>
+                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 15px;">اختر فئة الرحلة</div>
+
+                    <div class="ride-card selected" onclick="selectRide(this)">
+                        <div class="ride-img">💎</div>
+                        <div class="ride-info">
+                            <div class="ride-name">N One ألماسي <span style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px;">VIP</span></div>
+                            <div class="ride-time">وصول سريع • سيارات حديثة</div>
+                        </div>
+                        <div class="ride-price">3.50 د.أ</div>
+                    </div>
+
+                    <div class="ride-card pink-option" onclick="selectRide(this)">
+                        <div class="ride-img">🌸</div>
+                        <div class="ride-info">
+                            <div class="ride-name" style="color: var(--pink);">N One Pink</div>
+                            <div class="ride-time">كباتن سيدات فقط • أمان تام</div>
+                        </div>
+                        <div class="ride-price">3.50 د.أ</div>
+                    </div>
+
+                    <div class="ride-card" onclick="selectRide(this)">
+                        <div class="ride-img">🚗</div>
+                        <div class="ride-info">
+                            <div class="ride-name">N One اقتصادي</div>
+                            <div class="ride-time">توفير أكثر للمشاوير اليومية</div>
+                        </div>
+                        <div class="ride-price">2.20 د.أ</div>
+                    </div>
+
+                    <div class="ride-card" onclick="selectRide(this)">
+                        <div class="ride-img">📦</div>
+                        <div class="ride-info">
+                            <div class="ride-name">طرد سري (Secure)</div>
+                            <div class="ride-time">تسليم برمز PIN للمنقولات الثمينة</div>
+                        </div>
+                        <div class="ride-price">2.50 د.أ</div>
+                    </div>
+
+                    <div class="gift-toggle" style="margin-top: 15px; margin-bottom: 10px;">
+                        <span>🎁 طلب سيارة لصديق/عائلة</span>
+                        <label class="switch-small">
+                            <input type="checkbox" onchange="if(this.checked) showToast('ميزة الإهداء', 'سيتم إرسال رابط التتبع ورسالة تأكيد للشخص الآخر', '📲')">
+                            <span class="slider-small"></span>
+                        </label>
+                    </div>
+
+                    <button class="btn-main" onclick="showMoodPanel()">التالي: ضبط مزاج الرحلة ⚙️</button>
+                </div>
+
+                <div id="state-mood" class="mood-panel">
+                    <button class="btn-back-sheet" style="text-align: right; width: 100%;" onclick="backToRides()">🡢</button>
+                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 5px; color: var(--primary);">مزاج الرحلة (VIP) 👑</div>
+                    <p style="font-size: 12px; color: #64748b; margin-bottom: 20px;">سيتم إبلاغ الكابتن بتفضيلاتك لضمان راحتك التامة.</p>
+
+                    <div class="mood-grid">
+                        <div class="mood-btn" onclick="this.classList.toggle('active')">
+                            <span>🔇</span> هدوء تام (بدون أحاديث)
+                        </div>
+                        <div class="mood-btn active" onclick="this.classList.toggle('active')">
+                            <span>❄️</span> الرجاء تشغيل التكييف
+                        </div>
+                        <div class="mood-btn" onclick="this.classList.toggle('active')">
+                            <span>🎶</span> تشغيل موسيقى هادئة
+                        </div>
+                        <div class="mood-btn" onclick="this.classList.toggle('active')">
+                            <span>🚭</span> خالية من التدخين
+                        </div>
+                    </div>
+
+                    <button class="btn-main" style="background: var(--gold); color: var(--primary);" onclick="startSearching()">تأكيد وبحث عن كابتن 🚀</button>
+                </div>
+
+                <div id="state-searching" class="searching-panel">
+                    <div class="radar-spinner"></div>
+                    <div class="searching-title">نبحث لك عن الأفضل...</div>
+                    <div class="searching-desc">جاري إرسال تفضيلاتك للكباتن المتاحين في محيطك.</div>
+                    <button class="btn-main" style="background: #f1f5f9; color: var(--danger); margin-top: 30px; box-shadow: none;" onclick="goBackHome()">إلغاء الطلب ✕</button>
+                </div>
+
+                <div id="offers-section" class="offers-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                        <h3 style="margin:0; color:var(--primary);">📡 عروض الكباتن</h3>
+                        <button style="background:var(--danger); color:white; border:none; padding:5px 10px; border-radius:8px; cursor:pointer;" onclick="cancelRequest()">إلغاء</button>
+                    </div>
+                    
+                    <div class="offer-card">
+                        <div class="offer-cap-info">
+                            <span style="font-size: 16px; font-weight: 900; color: var(--primary);">كابتن أحمد 🦸‍♂️</span>
+                            <span style="font-size: 12px; color: #64748b; font-weight: bold;">تويوتا بريوس • يبعد 2 دقيقة</span>
+                            <span style="font-size: 11px; background: var(--diamond); color: var(--info); padding: 2px 6px; border-radius: 5px; width: fit-content;">💎 4.9 تقييم ألماسي</span>
+                        </div>
+                        <div style="text-align: left;">
+                            <div class="offer-price">2.50 د.أ</div>
+                            <button class="offer-btn" onclick="acceptOffer('أحمد')">قبول ✅</button>
+                        </div>
+                    </div>
+
+                    <div class="offer-card" style="border-color: #e2e8f0; box-shadow: none;">
+                        <div class="offer-cap-info">
+                            <span style="font-size: 16px; font-weight: 900; color: var(--primary);">كابتن سارة 🌸</span>
+                            <span style="font-size: 12px; color: #64748b; font-weight: bold;">كيا نيرو • تبعد 4 دقائق</span>
+                            <span style="font-size: 11px; background: var(--pink-light); color: var(--pink); padding: 2px 6px; border-radius: 5px; width: fit-content;">⭐ N One Pink</span>
+                        </div>
+                        <div style="text-align: left;">
+                            <div class="offer-price">2.75 د.أ</div>
+                            <button class="offer-btn" style="background: var(--pink);" onclick="acceptOffer('سارة')">قبول ✅</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="market-section" class="market-panel">
+                    
+                    <div class="multi-errand-banner" onclick="showModal('جيبلي بطريقك 🛍️', 'هل نسيت شيئاً؟ اطلب من مطعمك المفضل، وبإمكانك إضافة طلب آخر من الصيدلية أو السوبر ماركت، وسيقوم نفس الكابتن بتجميع طلباتك وإيصالها مرة واحدة!', '➕', 'تصفح المتاجر', null, true)">
+                        <div>
+                            <div style="font-weight: 900; font-size: 14px;">ميزة "جيبلي بطريقك" 🛍️</div>
+                            <div style="font-size: 11px; opacity: 0.9;">اطلب من أكثر من مكان بكابتن واحد!</div>
+                        </div>
+                        <div style="font-size: 24px;">➕</div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;">
+                        <div style="background: var(--diamond); color: var(--info); padding: 8px 15px; border-radius: 15px; font-size: 12px; font-weight: bold; white-space: nowrap;">🍔 مطاعم</div>
+                        <div style="background: #f1f5f9; padding: 8px 15px; border-radius: 15px; font-size: 12px; font-weight: bold; white-space: nowrap;">💊 صيدليات</div>
+                        <div style="background: #f1f5f9; padding: 8px 15px; border-radius: 15px; font-size: 12px; font-weight: bold; white-space: nowrap;">🛒 سوبر ماركت</div>
+                    </div>
+
+                    <div class="restaurant-card" onclick="showModal('شاورما الإمبراطورية 🌯', 'أشهى الوجبات السريعة بتوصيل ألماسي سريع ومجاني للكباتن.', '🏪', 'استعراض المنيو', null, true)">
+                        <div class="rest-img" style="font-size: 30px;">🌯</div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 5px 0; font-size: 15px; color: var(--primary); font-weight: 900;">شاورما الإمبراطورية</h4>
+                            <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: bold;">أشهى الوجبات • توصيل ألماسي</p>
+                            <span style="background: #fef2f2; color: var(--danger); padding: 3px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; margin-top: 5px; display: inline-block;">🔥 الأكثر طلباً</span>
+                        </div>
+                    </div>
+
+                    <div class="restaurant-card" onclick="showModal('صيدلية الصحة 💊', 'يتوفر لدينا جميع أنواع الأدوية ومستحضرات التجميل مع خدمة التوصيل السريع.', '🏪', 'طلب الآن', null, true)">
+                        <div class="rest-img" style="font-size: 30px;">💊</div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 5px 0; font-size: 15px; color: var(--primary); font-weight: 900;">صيدلية الصحة</h4>
+                            <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: bold;">أدوية ومستحضرات تجميل</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= نظام الإشعارات الذكي (Toasts & Modals) =================
+        let modalCallback = null;
+
+        function showToast(title, desc, icon = '💎') {
+            const toast = document.getElementById('n-toast');
+            document.getElementById('toast-icon').innerText = icon;
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-desc').innerText = desc;
+            
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        function showModal(title, desc, icon, confirmText, onConfirm = null, isInfoOnly = false) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('modal-icon').innerText = icon;
+            
+            const confirmBtn = document.getElementById('modal-btn-confirm');
+            const cancelBtn = document.getElementById('modal-btn-cancel');
+            
+            confirmBtn.innerText = confirmText;
+            modalCallback = onConfirm;
+
+            if (isInfoOnly) {
+                cancelBtn.style.display = 'none';
+                confirmBtn.className = 'n-modal-btn n-modal-btn-confirm';
+            } else {
+                cancelBtn.style.display = 'block';
+                confirmBtn.className = title.includes('طوارئ') ? 'n-modal-btn n-modal-btn-confirm danger' : 'n-modal-btn n-modal-btn-confirm';
+            }
+
+            document.getElementById('n-modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('n-modal').classList.remove('show');
+            modalCallback = null;
+        }
+
+        function executeModalAction() {
+            if(modalCallback) modalCallback();
+            closeModal();
+        }
+
+
+        // ================= منطق التطبيق =================
+        
+        function setAIGreeting() {
+            const hour = new Date().getHours();
+            const greetingEl = document.getElementById('smart-greeting');
+            if (hour >= 5 && hour <= 11) {
+                greetingEl.innerHTML = 'صباح الخير، <span>عالشغل؟</span> 💼';
+            } else if (hour >= 12 && hour <= 16) {
+                greetingEl.innerHTML = 'طاب نهارك، <span>وقت الغداء؟</span> 🍔';
+            } else {
+                greetingEl.innerHTML = 'مساء الخير، <span>راجع للبيت؟</span> 🏠';
+            }
+        }
+        setAIGreeting();
+
+        function switchMainTab(tab, btn) {
+            document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            hideAllPanels();
+            if (tab === 'rides') document.getElementById('rides-section').style.display = 'block';
+            else document.getElementById('market-section').style.display = 'block';
+        }
+
+        function hideAllPanels() {
+            document.getElementById('rides-section').style.display = 'none';
+            document.getElementById('state-ride').style.display = 'none';
+            document.getElementById('state-mood').style.display = 'none';
+            document.getElementById('state-searching').style.display = 'none';
+            document.getElementById('offers-section').style.display = 'none';
+            document.getElementById('market-section').style.display = 'none';
+        }
+
+        function goBackHome() {
+            hideAllPanels();
+            document.getElementById('rides-section').style.display = 'block';
+        }
+
+        function showRideOptions() {
+            hideAllPanels();
+            document.getElementById('state-ride').style.display = 'block';
+        }
+
+        function backToRides() {
+            hideAllPanels();
+            document.getElementById('state-ride').style.display = 'block';
+        }
+
+        function selectRide(element) {
+            document.querySelectorAll('.ride-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function showMoodPanel() {
+            hideAllPanels();
+            document.getElementById('state-mood').style.display = 'block';
+        }
+
+        function startSearching() {
+            hideAllPanels();
+            document.getElementById('state-searching').style.display = 'block';
+            
+            setTimeout(() => {
+                if (document.getElementById('state-searching').style.display === 'block') {
+                    showModal('تم إيجاد كابتن!', 'الكابتن ألماسي في طريقه إليك وتم تفعيل التكييف بناءً على طلبك.', '🚘', 'تتبع الرحلة', () => { goBackHome(); }, true);
+                }
+            }, 3000);
+        }
+
+        function requestOffers() {
+            hideAllPanels();
+            document.getElementById('offers-section').style.display = 'block';
+        }
+
+        function cancelRequest() { goBackHome(); }
+
+        function acceptOffer(name) {
+            showToast('تم تأكيد الرحلة', `السيارة مع الكابتن ${name} في طريقها إليك الآن!`, '🚀');
+            goBackHome();
+        }
+
+        function triggerSOS() {
+            showModal('🚨 تنبيه طوارئ (N One Shield)', 'سيتم إرسال موقعك المباشر فوراً لغرفة عمليات الشركة والاتصال بالجهات الأمنية. هل أنت متأكد؟', '🛡️', 'تفعيل الحماية الفورية', () => {
+                showToast('درع الحماية مفعل', 'فريق العمليات يتابع موقعك ويتحرك الآن!', '🚨');
+            });
+        }
+
+        function activateVoiceAI() {
+            showToast('الذكاء الاصطناعي مفعل', 'تحدث الآن... (مثال: اطلبلي كابتن لمرج الحمام)', '🎙️');
+        }
+    </script>
+</body>
+</html>
