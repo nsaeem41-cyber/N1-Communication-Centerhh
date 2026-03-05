@@ -1,176 +1,93 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | System Setup & Core Init</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #000000 0%, #1a237e 100%); 
-            height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; color: #333;
-        }
-        .setup-card {
-            background: rgba(255, 255, 255, 0.95); width: 90%; max-width: 480px; padding: 40px;
-            border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); text-align: center; border-top: 6px solid #d4af37;
-        }
-        h1 { margin: 0; color: #1a237e; font-size: 28px; font-weight: 800; letter-spacing: 1px; }
-        p { color: #666; margin-top: 10px; font-size: 14px; font-weight: bold; }
-        .input-group { margin-top: 20px; text-align: right; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 13px; color: #1a237e; }
-        input {
-            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px;
-            font-size: 15px; background: #fafafa; outline: none; box-sizing: border-box; margin-bottom: 10px; transition: 0.3s;
-            font-weight: bold;
-        }
-        input:focus { border-color: #d4af37; background: #fff; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
-        .btn-install {
-            background: linear-gradient(135deg, #1a237e, #0d47a1); color: white; border: none; padding: 16px 30px;
-            font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer;
-            width: 100%; margin-top: 25px; transition: 0.3s; box-shadow: 0 10px 25px rgba(26, 35, 126, 0.3);
-        }
-        .btn-install:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(26, 35, 126, 0.5); }
-        .btn-install:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
-        #status { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-weight: bold; font-size: 14px; }
-        .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-        .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-        .info { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
-        #setup-form { display: none; } 
-        
-        .core-badge {
-            background: rgba(212, 175, 55, 0.1); color: #d4af37; padding: 5px 15px;
-            border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid rgba(212, 175, 55, 0.3);
-            display: inline-block; margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
+const CACHE_NAME = 'n-one-captain-v5-diamond';
+const urlsToCache = [
+    './',
+    './captain.html',
+    './manifest.json',
+    './logo.jpg'
+];
 
-    <div class="setup-card">
-        <h1>N One <span style="color:#d4af37">Central Core</span></h1>
-        <p>تهيئة الجذور المركزية وبناء الهرم الإداري السيادي</p>
-        <div class="core-badge">تأسيس نظام العزل الذكي متعدد الشركات</div>
-        <div id="status" class="info" style="display:block;">جاري فحص السيرفر والتحقق من الأمان ⏳</div>
-        <div id="setup-form">
-            <div class="input-group"><label>المسمى الرسمي للإدارة المركزية (System Name)</label><input type="text" id="sys_name" placeholder="مثال: الإدارة العليا المركزية"></div>
-            <div class="input-group"><label>اسم المستخدم للإدارة (User ID)</label><input type="text" id="admin_user" placeholder="أدخل اسم المستخدم"></div>
-            <div class="input-group"><label>كلمة المرور (Password)</label><input type="password" id="admin_pass" placeholder="أدخل كلمة المرور القوية"></div>
-            <div class="input-group"><label>مفتاح الأمان السري (Setup Key)</label><input type="password" id="setup_key" placeholder="أدخل كود التنصيب السري"></div>
-            <button id="btn" class="btn-install" onclick="installSystem()">تأسيس القواعد المركزية الآن 🚀</button>
-        </div>
-    </div>
+// مرحلة التثبيت: تجهيز ملفات الكابتن في الذاكرة
+self.addEventListener('install', event => {
+    self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                console.log('Captain assets cached successfully');
+                return cache.addAll(urlsToCache);
+            })
+    );
+});
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+// مرحلة التفعيل: مسح أي كاش قديم وتنظيف الذاكرة
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
-            authDomain: "n-one-global.firebaseapp.com",
-            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
-            projectId: "n-one-global",
-            storageBucket: "n-one-global.firebasestorage.app",
-            messagingSenderId: "627262885530",
-            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        window.onload = async function() {
-            try {
-                const dbRef = ref(db);
-                const snapshot = await get(child(dbRef, 'users'));
-                let adminExists = false;
-                
-                if (snapshot.exists()) {
-                    const users = snapshot.val();
-                    adminExists = Object.values(users).some(user => user.role === 'admin');
+// إدارة الطلبات: استراتيجية (Network First) عشان نشوف التحديثات فوراً
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        fetch(event.request)
+            .then(response => {
+                // إذا الاستجابة صحيحة نخزن نسخة ونرجعها
+                if (response && response.status === 200 && response.type === 'basic') {
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
                 }
-                
-                if (adminExists) {
-                    showStatus("error", "النظام منصب ومحمي مسبقا لا يمكن إنشاء مدير جديد");
-                    document.getElementById('setup-form').style.display = 'none';
-                } else {
-                    showStatus("success", "السيرفر جاهز للتنصيب أدخل البيانات الرسمية للإدارة");
-                    document.getElementById('setup-form').style.display = 'block';
+                return response;
+            })
+            .catch(() => {
+                // في حال انقطع النت نرجع النسخة المخزنة
+                return caches.match(event.request);
+            })
+    );
+});
+
+// نظام الإشعارات الرسمي لإمبراطورية N One
+self.addEventListener('push', event => {
+    const options = {
+        body: event.data ? event.data.text() : 'لديك طلب جديد بانتظارك الآن 🔥',
+        icon: 'logo.jpg',
+        badge: 'logo.jpg',
+        vibrate: [200, 100, 200, 100, 200],
+        tag: 'n-one-order',
+        renotify: true,
+        requireInteraction: true,
+        data: {
+            url: './captain.html'
+        }
+    };
+
+    event.waitUntil(
+        self.registration.showNotification('N One - إمبراطورية التوصيل 💎', options)
+    );
+});
+
+// فتح التطبيق فور النقر على الإشعار
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then(windowClients => {
+            for (let i = 0; i < windowClients.length; i++) {
+                let client = windowClients[i];
+                if (client.url.includes('captain.html') && 'focus' in client) {
+                    return client.focus();
                 }
-            } catch (error) {
-                showStatus("error", "خطأ في الاتصال بالسيرفر تأكد من الإنترنت");
             }
-        }
-
-        window.installSystem = async function() {
-            const btn = document.getElementById('btn');
-            const sysNameVal = document.getElementById('sys_name').value.trim() || "الإدارة العليا المركزية";
-            const userVal = document.getElementById('admin_user').value.trim();
-            const passVal = document.getElementById('admin_pass').value.trim();
-            const keyVal = document.getElementById('setup_key').value.trim();
-
-            if (!userVal || !passVal || !keyVal) {
-                showStatus("error", "الرجاء تعبئة جميع الحقول المطلوبة");
-                return;
+            if (clients.openWindow) {
+                return clients.openWindow('./captain.html');
             }
-            if (keyVal !== "555") {
-                showStatus("error", "مفتاح الأمان السري غير صحيح");
-                return;
-            }
-
-            btn.innerHTML = "جاري الحفر في الخزنة الماسية ⏳";
-            btn.disabled = true;
-
-            const encodedPass = btoa(passVal);
-            const adminUser = {
-                id: "ADMIN_" + Date.now(),
-                user: userVal,
-                pass: encodedPass, 
-                name: sysNameVal, 
-                role: "admin",      
-                type: "admin_master", 
-                status: "active",   
-                expiry: "2099-12-31",
-                date: new Date().toISOString()
-            };
-
-            const rootNodesInit = {
-                "system_core/setup_date": new Date().toISOString(),
-                "system_core/hierarchy_mode": "Strict_Isolation_Enabled",
-                "system_core/version": "Diamond_Pro_9.0",
-                "shops/system_init": { is_core: true, created_at: Date.now() },
-                "captains/system_init": { is_core: true, created_at: Date.now() },
-                "orders/system_init": { is_core: true, created_at: Date.now() },
-                "prices/system_init": { is_core: true, created_at: Date.now() },
-                "assigned_orders/system_init": { is_core: true, created_at: Date.now() },
-                "announcements/system_init": { is_core: true, created_at: Date.now() },
-                "alerts/system_init": { is_core: true, created_at: Date.now() }
-            };
-
-            try {
-                await update(ref(db), rootNodesInit);
-                
-                await set(ref(db, 'users/' + userVal), adminUser);
-                
-                showStatus("success", "تم تأسيس الجذور المركزية بنجاح انتظر للتوثيق النهائي");
-                btn.innerHTML = "تم التثبيت بنجاح ✔️";
-                document.getElementById('setup-form').style.display = 'none';
-
-                setTimeout(() => {
-                    window.location.replace('index.html');
-                }, 3000);
-
-            } catch (error) {
-                showStatus("error", "حدث خطأ في التوثيق الجذري حاول مرة أخرى");
-                btn.innerHTML = "حاول مرة أخرى 🔄";
-                btn.disabled = false;
-            }
-        }
-
-        window.showStatus = function(type, msg) {
-            const el = document.getElementById('status');
-            el.className = type;
-            el.innerText = msg;
-            el.style.display = 'block';
-        }
-    </script>
-</body>
-</html>
+        })
+    );
+});
