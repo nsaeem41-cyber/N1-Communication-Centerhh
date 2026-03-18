@@ -3,333 +3,528 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | بوابة الدخول الرسمية</title>
+    <title>N One | Captain Rewards Center 🎁</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="icon" type="image/png" href="n_one_logo_new.png">
-
-    <meta property="og:title" content="N One | بوابة الدخول الرسمية">
-    <meta property="og:description" content="نظام الوصول الآمن - N One Global Systems">
-    <meta property="og:image" content="n_one_logo_new.png">
-    <meta property="og:type" content="website">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="n_one_logo_new.png">
-
     <style>
-        /* ================= تصميم البوابة الإمبراطورية (Royal & Official) ================= */
-        :root {
-            --primary: #0f172a;
-            --accent: #1e293b;
-            --gold: #d4af37;
-            --glass-bg: rgba(15, 23, 42, 0.75);
-            --glass-border: rgba(212, 175, 55, 0.3);
-            --input-bg: rgba(255, 255, 255, 0.04);
-            --text-main: #ffffff;
-            --text-muted: #94a3b8;
-        }
+        :root { --primary: #020617; --gold: #D4AF37; --success: #10b981; --danger: #ef4444; --info: #0ea5e9; --night: #311b92; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--primary); color: #e2e8f0; overflow-x: hidden; background-image: radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.05) 0%, transparent 80%), linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); user-select: none; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at center, #1e293b, #0f172a, #000000);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
-            overflow: hidden;
-        }
-
-        /* مؤثرات الخلفية الملكية */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(rgba(212, 175, 55, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(212, 175, 55, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
-            z-index: 0;
-        }
-
-        .login-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            width: 90%;
-            max-width: 400px;
-            padding: 45px 35px;
-            border-radius: 25px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
-            text-align: center;
-            border: 1px solid var(--glass-border);
-            border-top: 5px solid var(--gold);
-            position: relative;
-            z-index: 1;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .brand h1 { 
-            margin: 0; 
-            font-size: 42px; 
-            font-weight: 900; 
-            color: var(--text-main); 
-            letter-spacing: 2px;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .gold { color: var(--gold); }
+        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(212, 175, 55, 0.15); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); }
+        .gold-glow { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); color: var(--gold); }
         
-        .subtitle { 
-            color: var(--gold); 
-            font-size: 13px; 
-            margin-bottom: 35px; 
-            margin-top: 10px;
-            font-weight: 900; 
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-            display: inline-block;
-            padding-bottom: 8px;
-        }
+        .vault-input { background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(212, 175, 55, 0.2); color: #F9E27D; font-family: 'Cairo', sans-serif; font-weight: bold; transition: 0.3s; width: 100%; padding: 12px; border-radius: 12px; outline: none;}
+        .vault-input:focus { border-color: var(--info); box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);}
+        .vault-select { background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(212, 175, 55, 0.2); color: white; padding: 12px; border-radius: 12px; width: 100%; outline: none; font-weight: bold; }
+        
+        .card-header { border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        
+        .btn-action { width: 100%; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 15px; cursor: pointer; border: none; transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-action:active { transform: scale(0.98); }
+        
+        .btn-publish { background: linear-gradient(135deg, var(--info), #0284c7); color: white; }
+        .btn-gold { background: linear-gradient(135deg, var(--gold), #b48608); color: #020617; }
+        .btn-success { background: linear-gradient(135deg, var(--success), #059669); color: white; }
 
-        .input-group { margin-bottom: 25px; text-align: right; }
-        
-        label { 
-            display: block; 
-            margin-bottom: 10px; 
-            font-weight: 800; 
-            font-size: 12px; 
-            color: var(--text-muted); 
-            letter-spacing: 0.5px;
-        }
-        
-        input {
-            width: 100%; 
-            padding: 16px 18px; 
-            border: 1px solid rgba(212, 175, 55, 0.2); 
-            border-radius: 12px;
-            font-size: 15px; 
-            background: var(--input-bg); 
-            color: var(--text-main);
-            outline: none; 
-            transition: all 0.3s ease;
-            box-sizing: border-box; 
-            font-weight: bold;
-            font-family: inherit;
-        }
-        
-        input:focus { 
-            border-color: var(--gold); 
-            background: rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15); 
-        }
+        .swal2-popup { background: #0f172a !important; border: 1px solid rgba(212,175,55,0.3) !important; border-radius: 16px !important; color: white !important; }
+        .swal2-title { color: var(--gold) !important; font-family: 'Cairo', sans-serif !important; }
+        .swal2-confirm { background: linear-gradient(45deg, var(--gold), #F9E27D) !important; color: black !important; font-weight: bold !important; border-radius: 10px !important; }
+        .swal2-cancel { background: rgba(239,68,68,0.2) !important; color: #ef4444 !important; border-radius: 10px !important;}
 
-        .btn-login {
-            width: 100%; 
-            padding: 18px; 
-            background: linear-gradient(135deg, #d4af37, #b48608); 
-            color: var(--primary);
-            border: none; 
-            border-radius: 12px; 
-            font-size: 15px; 
-            font-weight: 900;
-            cursor: pointer; 
-            transition: all 0.3s ease; 
-            margin-top: 10px;
-            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2);
-            letter-spacing: 1px;
-        }
-        
-        .btn-login:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4); 
-            background: linear-gradient(135deg, #e5c158, #c59719);
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
 
-        .msg-box {
-            margin-top: 20px; 
-            padding: 15px; 
-            border-radius: 10px; 
-            font-size: 13px;
-            display: none; 
-            font-weight: bold;
-        }
-        
-        .error { 
-            background: rgba(239, 68, 68, 0.1); 
-            color: #fca5a5; 
-            border: 1px solid rgba(239, 68, 68, 0.3); 
-            border-right: 4px solid var(--danger);
-        }
-        
-        .footer { 
-            margin-top: 35px; 
-            font-size: 11px; 
-            color: #475569; 
-            border-top: 1px solid rgba(255, 255, 255, 0.05); 
-            padding-top: 20px; 
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
+        .nav-tab-btn { transition: all 0.3s ease; border: 1px solid transparent; }
+        .nav-tab-btn.active { background: rgba(212, 175, 55, 0.1); color: var(--gold); border-color: rgba(212, 175, 55, 0.3); }
     </style>
 </head>
-<body>
+<body class="flex flex-col h-screen overflow-hidden">
 
-    <div class="login-card">
+    <nav class="glass-panel flex justify-between items-center px-6 py-4 z-50 sticky top-0 border-b-2 border-b-yellow-500">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-700 flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+                <i class="fas fa-gift text-slate-900 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-white tracking-widest uppercase">N <span class="gold-glow">ONE</span> REWARDS</h1>
+                <span id="header-company-name" class="text-[10px] text-yellow-500 font-mono tracking-widest bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">ريموت الحوافز المركزي</span>
+            </div>
+        </div>
         
-        <div class="brand">
-            <h1>N <span class="gold">One</span></h1>
+        <div class="hidden md:flex gap-2">
+            <button class="nav-tab-btn text-sm font-bold px-3 py-2 rounded-lg text-slate-400 hover:text-white transition-all" onclick="window.location.href='ops-room.html'"><i class="fas fa-satellite-dish ml-1"></i> الرادار</button>
+            <button class="nav-tab-btn text-sm font-bold px-3 py-2 rounded-lg text-slate-400 hover:text-white transition-all" onclick="window.location.href='ops-captains.html'"><i class="fas fa-users ml-1"></i> سجل الكباتن</button>
+            <button class="nav-tab-btn text-sm font-bold px-3 py-2 rounded-lg text-slate-400 hover:text-white transition-all" onclick="window.location.href='ops-prices.html'"><i class="fas fa-tags ml-1"></i> المصفوفة 💰</button>
+            <button class="nav-tab-btn active text-sm font-bold px-3 py-2 rounded-lg bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 transition-all"><i class="fas fa-gift ml-1"></i> الحوافز</button>
+            <button id="btn-fraud-center" style="display: none;" class="nav-tab-btn text-sm font-bold px-3 py-2 rounded-lg text-slate-400 hover:text-white transition-all" onclick="window.location.href='ops-fraud.html'"><i class="fas fa-user-secret ml-1"></i> التحايل</button>
+            <button class="text-sm font-bold px-3 py-2 rounded-lg bg-slate-800 text-slate-300 border border-slate-600 hover:bg-slate-700 transition-all" onclick="window.location.href='client.html'"><i class="fas fa-arrow-right ml-1"></i> الإدارة</button>
         </div>
 
-        <div class="subtitle">بوابة الدخول الرسمية</div>
+        <div class="flex gap-2 lg:gap-4">
+            <div class="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700 text-center hidden md:block">
+                <div class="text-sm font-black text-yellow-500" id="stat-cap-total">0</div>
+                <div class="text-[9px] text-slate-400 font-bold">العدد الكلي</div>
+            </div>
+            <div class="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700 text-center">
+                <div class="text-sm font-black text-yellow-500" id="stat-pending">0</div>
+                <div class="text-[9px] text-slate-400 font-bold">الانتظار</div>
+            </div>
+            <div class="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 text-center">
+                <div class="text-sm font-black text-emerald-400" id="stat-cap-active">0</div>
+                <div class="text-[9px] text-emerald-500/70 font-bold">متاح</div>
+            </div>
+            <div class="bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 text-center">
+                <div class="text-sm font-black text-red-400" id="stat-cap-paused">0</div>
+                <div class="text-[9px] text-red-500/70 font-bold">غير متاح</div>
+            </div>
+            <div class="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700 text-center">
+                <div class="text-sm font-black text-yellow-500" id="stat-completed-total">0</div>
+                <div class="text-[9px] text-slate-400 font-bold">المكتمل</div>
+            </div>
+        </div>
+    </nav>
 
-        <div class="input-group">
-            <label>معرف الدخول الرسمي</label>
-            <input type="text" id="username" placeholder="أدخل المعرف الخاص بك">
+    <div class="flex md:hidden gap-2 p-3 overflow-x-auto glass-panel border-b border-yellow-600/20 sticky top-[74px] z-40">
+        <button class="nav-tab-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-400 whitespace-nowrap" onclick="window.location.href='ops-room.html'">📡 الرادار</button>
+        <button class="nav-tab-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-400 whitespace-nowrap" onclick="window.location.href='ops-captains.html'">🦸‍♂️ الكباتن</button>
+        <button class="nav-tab-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-400 whitespace-nowrap" onclick="window.location.href='ops-prices.html'">💰 المصفوفة</button>
+        <button class="nav-tab-btn active text-xs font-bold px-3 py-2 rounded-lg whitespace-nowrap">🎁 الحوافز</button>
+        <button id="btn-fraud-center-mobile" style="display: none;" class="nav-tab-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-400 whitespace-nowrap" onclick="window.location.href='ops-fraud.html'">🕵️‍♀️ التحايل</button>
+        <button class="text-xs font-bold px-3 py-2 rounded-lg bg-slate-800 text-slate-300 border border-slate-600 whitespace-nowrap" onclick="window.location.href='client.html'">🔙 الإدارة</button>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden flex-col p-4 md:p-8 gap-6 overflow-y-auto">
+        
+        <div class="w-full text-center mb-2">
+            <h2 class="text-2xl font-black text-white">تحكم الحوافز والسباقات <i class="fas fa-chess-king text-yellow-500 ml-2"></i></h2>
+            <p class="text-slate-400 font-bold text-sm mt-2">منصة التحكم اليدوي المباشر لإدارة حماس الفرسان في الميدان</p>
         </div>
 
-        <div class="input-group">
-            <label>رمز المرور</label>
-            <input type="password" id="password" placeholder="أدخل رمز المرور السري">
-        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-6xl mx-auto">
+            
+            <div class="glass-panel p-6 rounded-3xl border-t-4 border-t-indigo-500">
+                <div class="card-header">
+                    <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex justify-center items-center text-indigo-400 text-lg"><i class="fas fa-chart-line"></i></div>
+                    <div>
+                        <h3 class="font-black text-white text-lg">رادار الذروة اليدوي</h3>
+                        <p class="text-xs text-slate-400 font-bold">بث علاوة مالية لطلبات منطقة معينة</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1 font-bold">المبلغ الإضافي على كل طلب (د.أ)</label>
+                        <input type="number" id="surge_amount" class="vault-input" placeholder="مثال: 0.25">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1 font-bold">المنطقة المستهدفة</label>
+                        <select id="surge_area" class="vault-select">
+                            <option value="all">كافة المناطق (شامل)</option>
+                            <option value="عمان">عمان</option>
+                            <option value="إربد">إربد</option>
+                            <option value="الزرقاء">الزرقاء</option>
+                        </select>
+                    </div>
+                    <button class="btn-action btn-publish mt-2" onclick="broadcastSurge()">إطلاق موجة الذروة 🚀</button>
+                </div>
+            </div>
 
-        <button class="btn-login" onclick="loginNow()" id="loginBtn">تسجيل الدخول للنظام</button>
+            <div class="glass-panel p-6 rounded-3xl border-t-4 border-t-yellow-500">
+                <div class="card-header">
+                    <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex justify-center items-center text-yellow-500 text-lg"><i class="fas fa-flag-checkered"></i></div>
+                    <div>
+                        <h3 class="font-black text-white text-lg">السباق الملكي (التحديات)</h3>
+                        <p class="text-xs text-slate-400 font-bold">خلق تنافس لحظي بين النشامى</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-[11px] text-slate-400 mb-1 font-bold">الهدف (عدد الطلبات)</label>
+                            <input type="number" id="race_target" class="vault-input" placeholder="مثال: 5">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[11px] text-slate-400 mb-1 font-bold">عدد الفائزين الأوائل</label>
+                            <input type="number" id="race_winners" class="vault-input" placeholder="مثال: 10">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1 font-bold">الجائزة المالية للفائز (د.أ)</label>
+                        <input type="number" id="race_reward" class="vault-input" placeholder="مثال: 2.00">
+                    </div>
+                    <button class="btn-action btn-gold mt-2" onclick="launchRoyalRace()">إطلاق صافرة السباق 🏁</button>
+                </div>
+            </div>
 
-        <div id="msg" class="msg-box error"></div>
+            <div class="glass-panel p-6 rounded-3xl border-t-4 border-t-emerald-500">
+                <div class="card-header">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex justify-center items-center text-emerald-400 text-lg"><i class="fas fa-hand-holding-heart"></i></div>
+                    <div>
+                        <h3 class="font-black text-white text-lg">جبر الخواطر والترضية</h3>
+                        <p class="text-xs text-slate-400 font-bold">إيداع مباشر لمحفظة كابتن محدد</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1 font-bold">اختر الكابتن</label>
+                        <select id="comp_captain" class="vault-select">
+                            <option value="">جاري تحميل القائمة...</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-[11px] text-slate-400 mb-1 font-bold">مبلغ الترضية (د.أ)</label>
+                            <input type="number" id="comp_amount" class="vault-input" placeholder="0.50">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[11px] text-slate-400 mb-1 font-bold">سبب الترضية (للسجل)</label>
+                            <input type="text" id="comp_reason" class="vault-input" placeholder="تعويض مسافة/إلغاء">
+                        </div>
+                    </div>
+                    <button class="btn-action btn-success mt-2" onclick="sendCompensation()">اعتماد الإيداع الفوري 💸</button>
+                </div>
+            </div>
 
-        <div class="footer">
-            &copy; 2026 N ONE GLOBAL SYSTEMS<br>
-            SECURE ACCESS PROTOCOL
+            <div class="glass-panel p-6 rounded-3xl border-t-4 border-t-purple-500 flex flex-col justify-between">
+                <div>
+                    <div class="card-header">
+                        <div class="w-10 h-10 rounded-full bg-purple-500/20 flex justify-center items-center text-purple-400 text-lg"><i class="fas fa-gift"></i></div>
+                        <div>
+                            <h3 class="font-black text-white text-lg">صندوق الحظ العشوائي</h3>
+                            <p class="text-xs text-slate-400 font-bold">اختيار كابتن متصل عشوائياً لمكافأة فجائية</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-center mb-4">
+                        <p class="text-slate-300 font-bold text-sm">سيقوم النظام بعمل قرعة مخابراتية بين جميع الكباتن المتصلين حالياً واختيار فائز واحد.</p>
+                        <p class="text-info font-black mt-2" id="online_count_badge">جاري جلب العدد...</p>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1 font-bold">قيمة الهدية العشوائية (د.أ)</label>
+                        <input type="number" id="lucky_amount" class="vault-input text-center text-xl text-purple-300" placeholder="1.00">
+                    </div>
+                </div>
+                <button class="btn-action mt-4" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white;" onclick="spinLuckyWheel()">سحب القرعة وإرسال الهدية 🎲</button>
+            </div>
+
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, get, update, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
-            authDomain: "n-one-global.firebaseapp.com",
-            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
-            projectId: "n-one-global",
-            storageBucket: "n-one-global.firebasestorage.app",
-            messagingSenderId: "627262885530",
-            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ", authDomain: "n-one-global.firebaseapp.com", databaseURL: "https://n-one-global-default-rtdb.firebaseio.com", projectId: "n-one-global" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        let currentUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser'));
+        let activeCompanyName = currentUser ? (currentUser.Client_Name || currentUser.name || '').trim() : 'الإدارة';
+        let compId = currentUser ? (currentUser.user || currentUser.Client_User) : 'default';
+
+        let allCaptains = [];
+        let onlineCaptains = [];
+        let globalUsers = [];
+
         window.onload = function() {
-            localStorage.removeItem('currentUser');
-            localStorage.removeItem('n1_captain_session');
+            if (!currentUser) { window.location.replace('index.html'); return; }
+            document.getElementById('header-company-name').innerText = activeCompanyName;
+            
+            if(currentUser.can_use_fraud || currentUser.role === 'admin') {
+                document.getElementById('btn-fraud-center').style.display = 'inline-flex';
+                document.getElementById('btn-fraud-center-mobile').style.display = 'inline-flex';
+            }
+            
+            fetchGlobalUsers();
+            loadCloudArchive();
+            fetchPendingOrders();
+            fetchCaptains();
+        };
+
+        function checkCompanyMatch(u, compName) {
+            if (currentUser.role === 'admin') return true;
+            const activeName = String(compName).toLowerCase().trim();
+            const activeUser = currentUser ? String(currentUser.user || currentUser.Client_User || '').toLowerCase().trim() : '';
+            if(!activeName && !activeUser) return false;
+            const vals = [
+                String(u.Client_Master || '').toLowerCase().trim(),
+                String(u.master || '').toLowerCase().trim(),
+                String(u.company || '').toLowerCase().trim(),
+                String(u.Company_ID || '').toLowerCase().trim()
+            ];
+            return (activeName && vals.includes(activeName)) || (activeUser && vals.includes(activeUser));
         }
 
-        window.loginNow = async function() {
-            const u = document.getElementById('username').value.trim();
-            const p = document.getElementById('password').value.trim();
-            const btn = document.getElementById('loginBtn');
-            const msgBox = document.getElementById('msg');
+        // ================= الإحصائيات العلوية (Stats) =================
+        function fetchGlobalUsers() {
+            onValue(ref(db, 'captains'), (snapshot) => {
+                if (snapshot.exists()) {
+                    globalUsers = Object.values(snapshot.val()).filter(c => checkCompanyMatch(c, activeCompanyName));
+                    updateCaptainsStats();
+                }
+            });
+        }
 
-            msgBox.style.display = 'none';
+        function updateCaptainsStats() {
+            let total = globalUsers.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true).length;
+            let active = globalUsers.filter(c => (c.Cap_Status || c.status) === 'active' && c.app_status === 'online').length;
+            let paused = globalUsers.filter(c => (c.Cap_Status || c.status) === 'paused' || ((c.Cap_Status || c.status) === 'active' && c.app_status === 'offline')).length;
 
-            if (!u || !p) {
-                showError("يرجى إدخال البيانات المطلوبة للمتابعة.");
+            document.getElementById('stat-cap-total').innerText = total;
+            document.getElementById('stat-cap-active').innerText = active;
+            document.getElementById('stat-cap-paused').innerText = paused;
+        }
+
+        function loadCloudArchive() {
+            const master = currentUser.user || currentUser.Client_User || 'default';
+            onValue(ref(db, `company_archives/${master}/orders`), (snapshot) => {
+                if (snapshot.exists()) {
+                    const today = new Date().toDateString();
+                    let count = 0;
+                    Object.values(snapshot.val()).forEach(o => {
+                        if (new Date(o.date).toDateString() === today && o.live_status !== 'rejected' && o.live_status !== 'canceled' && o.live_status !== 'cancelled_by_shop') {
+                            count++;
+                        }
+                    });
+                    document.getElementById('stat-completed-total').innerText = count;
+                } else {
+                    document.getElementById('stat-completed-total').innerText = "0";
+                }
+            });
+        }
+
+        function fetchPendingOrders() {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                if(snapshot.exists()) {
+                    const activeName = (currentUser.Client_Name || currentUser.name || '').toLowerCase().trim();
+                    const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
+                    
+                    let pendingCount = 0;
+                    Object.values(snapshot.val()).forEach(o => {
+                        const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                        if (orderComp && (orderComp === activeName || orderComp === activeUser)) {
+                            if (!['delivered', 'archived_and_deleted', 'cancelled', 'canceled', 'completed'].includes(o.OrderStatus) && o.FinancialStatus !== 'confirmed') {
+                                pendingCount++;
+                            }
+                        }
+                    });
+                    document.getElementById('stat-pending').innerText = pendingCount;
+                } else {
+                    document.getElementById('stat-pending').innerText = "0";
+                }
+            });
+        }
+        // ===============================================================
+
+        function fetchCaptains() {
+            onValue(ref(db, 'captains'), (snapshot) => {
+                const selectEl = document.getElementById('comp_captain');
+                const onlineBadge = document.getElementById('online_count_badge');
+                
+                if (snapshot.exists()) {
+                    allCaptains = Object.values(snapshot.val()).filter(c => checkCompanyMatch(c, activeCompanyName));
+                    onlineCaptains = allCaptains.filter(c => c.app_status === 'online');
+                    
+                    selectEl.innerHTML = '<option value="">-- اختر كابتن من القائمة --</option>';
+                    allCaptains.forEach(cap => {
+                        let isOnline = cap.app_status === 'online' ? '🟢' : '🔴';
+                        selectEl.innerHTML += `<option value="${cap.Cap_User || cap.user}">${cap.Cap_Name || cap.name} - ${cap.Cap_Phone} ${isOnline}</option>`;
+                    });
+
+                    onlineBadge.innerText = `عدد النشامى المتصلين الآن: ${onlineCaptains.length} كابتن 🟢`;
+                } else {
+                    selectEl.innerHTML = '<option value="">لا يوجد كباتن مسجلين</option>';
+                    onlineBadge.innerText = `عدد النشامى المتصلين الآن: 0`;
+                }
+            });
+        }
+
+        window.broadcastSurge = async function() {
+            const amount = parseFloat(document.getElementById('surge_amount').value);
+            const area = document.getElementById('surge_area').value;
+
+            if(!amount || amount <= 0) { Swal.fire('تنبيه', 'يرجى إدخال مبلغ صحيح للذروة', 'warning'); return; }
+
+            const { isConfirmed } = await Swal.fire({
+                title: 'إطلاق موجة الذروة 📈',
+                text: `سيتم تفعيل علاوة بقيمة ${amount} د.أ للمنطقة: ${area}. هل أنت متأكد؟`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، إطلاق الموجة 🚀',
+                cancelButtonText: 'تراجع'
+            });
+
+            if (isConfirmed) {
+                await update(ref(db, 'settings/default/radar_logic'), {
+                    surge_amount: amount,
+                    surge_area: area,
+                    timestamp: Date.now()
+                });
+
+                await update(ref(db, `alerts/global`), {
+                    message: `🔥 أوقات الذروة مفعلة! علاوة إضافية بقيمة ${amount} د.أ على الطلبات الجديدة في ${area === 'all' ? 'جميع المناطق' : area}.`,
+                    timestamp: Date.now()
+                });
+
+                Swal.fire('تم النشر!', 'تم تفعيل الذروة بنجاح وإشعار الكباتن.', 'success');
+                document.getElementById('surge_amount').value = '';
+            }
+        };
+
+        window.launchRoyalRace = async function() {
+            const target = parseInt(document.getElementById('race_target').value);
+            const winners = parseInt(document.getElementById('race_winners').value);
+            const reward = parseFloat(document.getElementById('race_reward').value);
+
+            if(!target || !winners || !reward) { Swal.fire('تنبيه', 'يرجى تعبئة كافة حقول السباق', 'warning'); return; }
+
+            const { isConfirmed } = await Swal.fire({
+                title: 'تأكيد السباق 🏁',
+                text: `أول ${winners} كباتن ينهون ${target} طلبات سيحصلون على ${reward} د.أ. إطلاق؟`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'إطلاق الصافرة 🏁',
+                cancelButtonText: 'تراجع'
+            });
+
+            if (isConfirmed) {
+                const raceId = "RACE_" + Date.now();
+                await update(ref(db, `active_challenges/${raceId}`), {
+                    type: 'race',
+                    target_orders: target,
+                    max_winners: winners,
+                    reward_amount: reward,
+                    current_winners: 0,
+                    status: 'active',
+                    created_at: Date.now()
+                });
+
+                await update(ref(db, `alerts/global`), {
+                    message: `🏁 سباق N One بدأ! أول ${winners} فرسان يوصلون ${target} طلبات سيحصلون على جائزة ${reward} د.أ فوراً! انطلقوا 🚀`,
+                    timestamp: Date.now()
+                });
+
+                Swal.fire('انطلق السباق!', 'تم إطلاق السباق وفتح العدادات للنشامى.', 'success');
+                document.getElementById('race_target').value = '';
+                document.getElementById('race_winners').value = '';
+                document.getElementById('race_reward').value = '';
+            }
+        };
+
+        window.sendCompensation = async function() {
+            const capKey = document.getElementById('comp_captain').value;
+            const amount = parseFloat(document.getElementById('comp_amount').value);
+            const reason = document.getElementById('comp_reason').value || 'مكافأة إدارية (جبر خواطر)';
+
+            if(!capKey || !amount || amount <= 0) { Swal.fire('تنبيه', 'يرجى اختيار كابتن وإدخال مبلغ صحيح', 'warning'); return; }
+
+            const { isConfirmed } = await Swal.fire({
+                title: 'اعتماد الإيداع 💸',
+                text: `سيتم إيداع ${amount} د.أ في محفظة الكابتن المختار. هل نعتمد؟`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، أودع المبلغ 💎',
+                cancelButtonText: 'تراجع'
+            });
+
+            if (isConfirmed) {
+                try {
+                    const capSnap = await get(ref(db, `captains/${capKey}`));
+                    if (capSnap.exists()) {
+                        const currentBal = parseFloat(capSnap.val().Cap_Balance || 0);
+                        const newBal = (currentBal + amount).toFixed(2);
+                        
+                        const updates = {};
+                        updates[`captains/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                        updates[`captains/${capKey}/balance`] = parseFloat(newBal);
+                        
+                        const logId = "COMP_" + Date.now();
+                        updates[`financial_logs/${compId}/${logId}`] = {
+                            type: 'compensation',
+                            amount: amount,
+                            captainId: capKey,
+                            reason: reason,
+                            timestamp: Date.now()
+                        };
+
+                        updates[`alerts/users/${capKey}`] = {
+                            message: `💎 جبر الخواطر: تم إيداع ${amount} د.أ في محفظتك. (${reason})`,
+                            timestamp: Date.now()
+                        };
+
+                        await update(ref(db), updates);
+                        Swal.fire('تم الإيداع!', 'تم إرسال التعويض وإشعار الكابتن بوقار.', 'success');
+                        document.getElementById('comp_amount').value = '';
+                        document.getElementById('comp_reason').value = '';
+                    }
+                } catch(e) { Swal.fire('خطأ', 'حدث خلل في الاتصال بقاعدة البيانات.', 'error'); }
+            }
+        };
+
+        window.spinLuckyWheel = async function() {
+            const amount = parseFloat(document.getElementById('lucky_amount').value);
+            if(!amount || amount <= 0) { Swal.fire('تنبيه', 'يرجى تحديد قيمة الهدية العشوائية', 'warning'); return; }
+
+            if (onlineCaptains.length === 0) {
+                Swal.fire('عذراً', 'لا يوجد أي كابتن متصل حالياً لتنفيذ القرعة!', 'info');
                 return;
             }
 
-            btn.innerHTML = "جاري التحقق من الهوية...";
-            btn.disabled = true;
+            Swal.fire({
+                title: '🎲 جاري خلط الأسماء...',
+                html: 'الأنظمة المخابراتية تختار بطل هذا اليوم...',
+                timer: 2500,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
+            }).then(async () => {
+                const randomIndex = Math.floor(Math.random() * onlineCaptains.length);
+                const winner = onlineCaptains[randomIndex];
+                const winnerKey = winner.Cap_User || winner.user;
+                const winnerName = winner.Cap_Name || winner.name;
 
-            try {
-                const dbRef = ref(db);
-                let userRecord = null;
-                let foundNode = "users";
-                
-                let snapshot = await get(child(dbRef, `users/${u}`));
-                if(snapshot.exists()) {
-                    userRecord = snapshot.val();
-                    foundNode = "users";
-                } else {
-                    snapshot = await get(child(dbRef, `shops/${u}`));
-                    if(snapshot.exists()) {
-                        userRecord = snapshot.val();
-                        foundNode = "shops";
-                    } else {
-                        snapshot = await get(child(dbRef, `captains/${u}`));
-                        if(snapshot.exists()) {
-                            userRecord = snapshot.val();
-                            foundNode = "captains";
-                        }
-                    }
+                const { isConfirmed } = await Swal.fire({
+                    title: '🎉 الفائز بالقرعة!',
+                    html: `النشمة <b>${winnerName}</b> هو الفائز!<br><br>هل تريد إيداع ${amount} د.أ لمحفظته الآن؟`,
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonText: 'إرسال الهدية 🎁',
+                    cancelButtonText: 'إلغاء السحب'
+                });
+
+                if (isConfirmed) {
+                    const currentBal = parseFloat(winner.Cap_Balance || winner.balance || 0);
+                    const newBal = (currentBal + amount).toFixed(2);
+                    
+                    const updates = {};
+                    updates[`captains/${winnerKey}/Cap_Balance`] = parseFloat(newBal);
+                    updates[`captains/${winnerKey}/balance`] = parseFloat(newBal);
+                    
+                    const logId = "LUCKY_" + Date.now();
+                    updates[`financial_logs/${compId}/${logId}`] = {
+                        type: 'lucky_box',
+                        amount: amount,
+                        captainId: winnerKey,
+                        captainName: winnerName,
+                        timestamp: Date.now()
+                    };
+
+                    updates[`alerts/global`] = {
+                        message: `🎁 صندوق الحظ العشوائي هبط اليوم على الكابتن البطل (${winnerName}) وربح ${amount} د.أ! مبارك للنشامى، والمرات القادمة قد تكون من نصيبك!`,
+                        timestamp: Date.now()
+                    };
+
+                    await update(ref(db), updates);
+                    Swal.fire('تم الإرسال!', 'تم توثيق الهدية في محفظته ونشر الإعلان للجميع.', 'success');
                 }
+            });
+        };
 
-                if (userRecord) {
-                    const dbPass = userRecord.Client_Pass || userRecord.pass || userRecord.Cap_Pass || userRecord.Shop_Pass || "";
-                    let encodedP = "";
-                    try { encodedP = btoa(p); } catch(e) {}
-
-                    if (dbPass === p || dbPass === encodedP) {
-                        const status = userRecord.Client_Status || userRecord.status || userRecord.Cap_Status || userRecord.Shop_Status;
-                        if (status !== 'active') {
-                            showError("عذراً، هذا الحساب غير نشط حالياً. يرجى مراجعة الإدارة.");
-                            resetBtn();
-                            return;
-                        }
-
-                        const secureSession = {
-                            ...userRecord,
-                            user: userRecord.Client_User || userRecord.user || userRecord.Cap_User || userRecord.Shop_User,
-                            pass: userRecord.Client_Pass || userRecord.pass || userRecord.Cap_Pass || userRecord.Shop_Pass,
-                            name: userRecord.Client_Name || userRecord.name || userRecord.Cap_Name || userRecord.Shop_Name,
-                            role: userRecord.Client_Role || userRecord.role || userRecord.Cap_Role,
-                            type: userRecord.Client_Type || userRecord.type,
-                            status: status,
-                            _node: foundNode,
-                            loginTime: Date.now()
-                        };
-                        
-                        localStorage.setItem('currentUser', JSON.stringify(secureSession));
-                        
-                        if (foundNode === "captains") {
-                            localStorage.setItem('n1_captain_session', JSON.stringify(secureSession));
-                            window.location.replace('captain.html');
-                        } else if (foundNode === "shops") {
-                            window.location.replace('shop.html');
-                        } else if (secureSession.role === 'admin') {
-                            window.location.replace('admin.html');
-                        } else {
-                            window.location.replace('client.html');
-                        }
-                    } else {
-                        showError("بيانات الدخول غير صحيحة.");
-                        resetBtn();
-                    }
-                } else {
-                    showError("بيانات الدخول غير صحيحة.");
-                    resetBtn();
-                }
-
-            } catch (err) {
-                showError("خطأ في الاتصال بالخادم. يرجى التحقق من الإنترنت.");
-                resetBtn();
-            }
-        }
-
-        function showError(text) {
-            const msg = document.getElementById('msg');
-            msg.innerText = text;
-            msg.style.display = 'block';
-        }
-
-        function resetBtn() {
-            const btn = document.getElementById('loginBtn');
-            btn.innerHTML = "تسجيل الدخول للنظام";
-            btn.disabled = false;
-        }
     </script>
 </body>
 </html>
